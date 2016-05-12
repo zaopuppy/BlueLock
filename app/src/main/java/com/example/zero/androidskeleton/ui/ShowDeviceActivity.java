@@ -11,9 +11,11 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -34,18 +36,11 @@ import com.example.zero.androidskeleton.utils.Utils;
 public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.DeviceListener {
     private static final String TAG = "ShowDeviceActivity";
 
-    private TextView mDetailText;
-    private Button openButton;
-
     private void log(String msg) {
         Log.i(TAG, msg + '\n');
     }
 
     private BtLeDevice mDevice = null;
-
-    private void showMsg(String msg) {
-        mDetailText.append(msg + '\n');
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,35 +48,29 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
 
         setContentView(R.layout.activity_show_device);
 
-        Intent intent = getIntent();
-        if (intent == null || intent.getExtras() == null) {
-            finish();
-            return;
-        }
-        Bundle bundle = intent.getExtras();
-
-        mDevice = BtLeService.INSTANCE.getDevice(bundle.getString("addr"));
-        if (mDevice == null) {
-            Utils.makeToast(this, "no device supplied");
-            finish();
-            return;
-        }
-
-        ActionBar actionBar = getSupportActionBar();
-        Log.e(TAG, "action bar: " + actionBar);
-        if (actionBar != null) {
-            actionBar.setTitle(mDevice.getName());
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
+        //Intent intent = getIntent();
+        //if (intent == null || intent.getExtras() == null) {
+        //    finish();
+        //    return;
+        //}
+        //Bundle bundle = intent.getExtras();
+        //
+        //mDevice = BtLeService.INSTANCE.getDevice(bundle.getString("addr"));
+        //if (mDevice == null) {
+        //    Utils.makeToast(this, "no device supplied");
+        //    finish();
+        //    return;
+        //}
+        //
+        //ActionBar actionBar = getSupportActionBar();
+        //Log.e(TAG, "action bar: " + actionBar);
+        //if (actionBar != null) {
+        //    actionBar.setTitle(mDevice.getName());
+        //    actionBar.setDisplayHomeAsUpEnabled(true);
+        //}
 
         setUiComp();
 
-    }
-
-    @Override
-    protected void onResume() {
-        mDevice.addDeviceListener(this);
-        super.onResume();
     }
 
     @Override
@@ -148,13 +137,38 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
     }
 
     @Override
+    protected void onResume() {
+        if (mDevice != null) {
+            mDevice.addDeviceListener(this);
+        }
+        super.onResume();
+    }
+
+    @Override
     protected void onPause() {
-        mDevice.removeDeviceListener(this);
-        mDevice.disconnectGatt();
+        if (mDevice != null) {
+            mDevice.removeDeviceListener(this);
+            mDevice.disconnectGatt();
+        }
         super.onPause();
     }
 
     private void setUiComp() {
+        EditText passwordEdit = (EditText) findViewById(R.id.password_edit);
+        assert passwordEdit != null;
+        passwordEdit.setImeActionLabel("解锁", KeyEvent.KEYCODE_ENTER);
+        passwordEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId != EditorInfo.IME_ACTION_DONE) {
+                    return false;
+                }
+
+                unlock(v.getText().toString());
+
+                return true;
+            }
+        });
         //mDetailText = (TextView) findViewById(R.id.device_detail);
         //assert mDetailText != null;
         //
@@ -188,6 +202,10 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
 
     }
 
+    private void unlock(String password) {
+        // TODO:
+    }
+
     private static abstract class State {
 
         abstract void handle(StateMachine machine, int event, Object o);
@@ -214,16 +232,22 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
         }
     }
 
-    // CONNECT --> OPEN --> TRANSFER-NUM -> DONE
-    private State WAIT_FOR_CONNECTION = new State() {
-        @Override
-        void handle(StateMachine machine, int event, Object o) {
-            switch (event) {
-                default:
-                    break;
-            }
-        }
-    };
+    //private static class UnlockSM extends StateMachine {
+    //    // CONNECT --> OPEN --> TRANSFER-NUM -> DONE
+    //    private State WAIT_FOR_CONNECTION = new State() {
+    //        @Override
+    //        void handle(StateMachine machine, int event, Object o) {
+    //            switch (event) {
+    //                default:
+    //                    break;
+    //            }
+    //        }
+    //    };
+    //
+    //    public UnlockSM() {
+    //        super(WAIT_FOR_CONNECTION);
+    //    }
+    //}
 
     private int mPassword = 0;
     private AlertDialog createPasswordDialog() {
@@ -242,7 +266,7 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
                         mPassword = Integer.parseInt(passText.getText().toString());
                         open(mPassword);
                     } catch (NumberFormatException e) {
-                        showMsg("invalid password");
+                        log("invalid password");
                     }
                 }
             })
@@ -305,7 +329,7 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
 
         byte[] msg = DoorProtocol.openDoor(password);
         if (msg == null) {
-            showMsg("invalid password?");
+            log("invalid password?");
             return;
         }
         mDevice.writeCharacteristic(characteristic1, msg, new BtLeDevice.ResultListener<Boolean>() {
@@ -325,11 +349,6 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
             @Override
             public void run() {
                 invalidateOptionsMenu();
-                if (state == BtLeDevice.State.READY) {
-                    openButton.setEnabled(true);
-                } else {
-                    openButton.setEnabled(false);
-                }
             }
         });
     }
@@ -371,7 +390,7 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                showMsg("result: " + resultStr);
+                log("result: " + resultStr);
             }
         });
     }

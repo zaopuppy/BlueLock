@@ -16,7 +16,10 @@
         android:layout_width="200sp"
         android:layout_height="wrap_content"
         android:inputType="numberPassword"
-        />
+        android:maxLines="1"
+        android:maxLength="12"
+        android:hint="输入密码"
+        android:imeOptions="actionDone"/>
 
     <ImageView
         android:id="@+id/icon_mode_img"
