@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">门禁控制</string>
+    <string name="title_activity_show_device">查看设备</string>
+</resources>
