@@ -3,15 +3,14 @@ package com.example.zero.androidskeleton.ui;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import com.example.zero.androidskeleton.R;
+import com.example.zero.androidskeleton.bt.BlueLockProtocol;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
-import com.example.zero.androidskeleton.bt.BlueLockProtocol;
 import com.example.zero.androidskeleton.log.Log;
 import com.example.zero.androidskeleton.state.Context;
 import com.example.zero.androidskeleton.state.State;
@@ -19,7 +18,7 @@ import com.example.zero.androidskeleton.state.StateMachine;
 import com.example.zero.androidskeleton.utils.Utils;
 
 
-public class ModifyPasswordActivity extends AppCompatActivity implements BtLeDevice.DeviceListener {
+public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.DeviceListener {
 
     private static final String TAG = "ModifyPasswordActivity";
 

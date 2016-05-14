@@ -1,28 +1,25 @@
 package com.example.zero.androidskeleton.ui;
 
 import android.Manifest;
-import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.*;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.ToggleButton;
 import com.example.zero.androidskeleton.R;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
+import com.example.zero.androidskeleton.log.Log;
 import com.example.zero.androidskeleton.utils.Utils;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
-public class SelectDeviceActivity extends AppCompatActivity {
+public class SelectDeviceActivity extends BaseActivity {
 
     private static final String TAG = "SelectDeviceActivity";
 

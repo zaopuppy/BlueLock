@@ -1,6 +1,7 @@
 package com.example.zero.androidskeleton.state;
 
-import android.util.Log;
+
+import com.example.zero.androidskeleton.log.Log;
 
 /**
  * Created by zero on 5/14/16.

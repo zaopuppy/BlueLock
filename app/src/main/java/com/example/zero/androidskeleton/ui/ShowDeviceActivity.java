@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,12 +26,8 @@ import com.example.zero.androidskeleton.utils.Utils;
  * * auto in range unlock
  * * report mobile phone number
  */
-public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.DeviceListener {
+public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.DeviceListener {
     private static final String TAG = "ShowDeviceActivity";
-
-    private void log(String msg) {
-        Log.i(TAG, msg + '\n');
-    }
 
     private BtLeDevice mDevice = null;
 
@@ -168,7 +163,7 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
 
     private void unlock(String password) {
         // FIXME: delete this line
-        log("unlock: " + password);
+        Log.d(TAG, "unlock: " + password);
         unlockSM.handle(EVENT_UNLOCK, -1, password);
     }
 
@@ -209,7 +204,7 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
 
         private void connect(Context context, int arg, Object o) {
             BtLeDevice.State state = mDevice.getState();
-            log("connect: current-state=" + state);
+            Log.d(TAG, "connect: current-state=" + state);
 
             switch (state) {
                 case READY:
@@ -238,7 +233,7 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
                         mDevice.connectGatt(ShowDeviceActivity.this);
                         context.setState(WAIT_FOR_CONNECT);
                     } else {
-                        log("expect disconnect event, received: " + state);
+                        Log.w(TAG, "expect disconnect event, received: " + state);
                     }
                     break;
                 default:
@@ -267,7 +262,7 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
                 case READY:
                     context.setState(READY);
                     String password = context.getString("password", null);
-                    log("context password: " + password);
+                    Log.d(TAG, "context password: " + password);
                     if (password != null) {
                         context.handle(EVENT_UNLOCK, -1, password);
                     }
@@ -296,13 +291,13 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
                     String password = (String) o;
                     BluetoothGattCharacteristic char1 = mDevice.getCharacteristic(0xfff1);
                     if (char1 == null) {
-                        log("failed to get characteristic 0xfff1");
+                        Log.e(TAG, "failed to get characteristic 0xfff1");
                         return;
                     }
                     mDevice.writeCharacteristic(char1, BlueLockProtocol.unlock(password), new BtLeDevice.ResultListener<Boolean>() {
                         @Override
                         public void onResult(Boolean result) {
-                            log("wrote password: " + result);
+                            Log.d(TAG, "wrote password: " + result);
                             if (result) {
                                 /* TODO: pass phone number */
                                 /* mDevice.writeCharacteristic(); */
