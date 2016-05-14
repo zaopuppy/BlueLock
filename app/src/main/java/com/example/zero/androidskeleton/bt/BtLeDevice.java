@@ -126,7 +126,13 @@ public class BtLeDevice extends BluetoothGattCallback {
 
         @Override
         public boolean exec() {
-            return innerWriteCharacteristic(gatt, characteristic, data);
+            boolean rv = innerWriteCharacteristic(gatt, characteristic, data);
+            if (!rv) {
+                if (listener != null) {
+                    listener.onResult(false);
+                }
+            }
+            return rv;
         }
 
         @Override

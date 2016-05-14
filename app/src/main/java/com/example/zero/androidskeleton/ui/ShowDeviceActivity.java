@@ -154,19 +154,6 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
     private void setUiComp() {
         final EditText passwordEdit = (EditText) findViewById(R.id.password_edit);
         assert passwordEdit != null;
-        // passwordEdit.setImeActionLabel("解锁", KeyEvent.KEYCODE_ENTER);
-        //passwordEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-        //    @Override
-        //    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-        //        if (actionId != EditorInfo.IME_ACTION_DONE) {
-        //            return false;
-        //        }
-        //
-        //        unlock(v.getText().toString());
-        //
-        //        return true;
-        //    }
-        //});
 
         ImageView unlockImg = (ImageView) findViewById(R.id.icon_mode_img);
         assert unlockImg != null;
@@ -176,37 +163,6 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
                 unlock(passwordEdit.getText().toString());
             }
         });
-        //mDetailText = (TextView) findViewById(R.id.device_detail);
-        //assert mDetailText != null;
-        //
-        //openButton = (Button) findViewById(R.id.open_button);
-        //assert openButton != null;
-        //openButton.setEnabled(false);
-        //openButton.setOnClickListener(new View.OnClickListener() {
-        //    @Override
-        //    public void onClick(View v) {
-        //        int password = BtDeviceStorage.INSTANCE.get(mDevice.getAddress());
-        //        if (password >= 0) {
-        //            mPassword = password;
-        //            open(password);
-        //            return;
-        //        }
-        //        AlertDialog dialog = createPasswordDialog();
-        //        dialog.show();
-        //    }
-        //});
-        //
-        //Button changeButton = (Button) findViewById(R.id.change_button);
-        //assert changeButton != null;
-        //changeButton.setEnabled(false);
-        //changeButton.setOnClickListener(new View.OnClickListener() {
-        //    @Override
-        //    public void onClick(View v) {
-        //        //future = mDevice.writeCharacteristic(0xfff1, new byte[0]);
-        //        //future.
-        //    }
-        //});
-
     }
 
     private void unlock(String password) {
@@ -332,11 +288,12 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
                     context.setState(IDLE);
                     break;
                 case EVENT_UNLOCK:
-                    String password = context.getString("password", null);
-                    if (password == null) {
-                        log("no password , don't unlock");
-                        return;
-                    }
+                    //String password = context.getString("password", null);
+                    //if (password == null) {
+                    //    log("no password , don't unlock");
+                    //    return;
+                    //}
+                    String password = (String) o;
                     BluetoothGattCharacteristic char1 = mDevice.getCharacteristic(0xfff1);
                     if (char1 == null) {
                         log("failed to get characteristic 0xfff1");
@@ -468,17 +425,6 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
         Log.e(TAG, "new state: " + state);
 
         unlockSM.handle(EVENT_DEV_STATE_CHANGED, -1, state);
-        //switch (state) {
-        //    case DISCONNECTED:
-        //        unlockSM.handle(EVENT_DISCONNECTED, -1, null);
-        //        break;
-        //    case READY:
-        //        unlockSM.handle(EVENT_READY, -1, null);
-        //        break;
-        //    default:
-        //        // ignore
-        //        break;
-        //}
 
         runOnUiThread(new Runnable() {
             @Override
