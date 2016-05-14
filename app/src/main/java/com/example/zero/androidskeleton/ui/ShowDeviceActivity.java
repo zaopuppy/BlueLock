@@ -20,6 +20,9 @@ import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
 import com.example.zero.androidskeleton.bt.BtLeUtil;
 import com.example.zero.androidskeleton.bt.DoorProtocol;
+import com.example.zero.androidskeleton.state.Context;
+import com.example.zero.androidskeleton.state.State;
+import com.example.zero.androidskeleton.state.StateMachine;
 import com.example.zero.androidskeleton.utils.Utils;
 
 /**
@@ -212,63 +215,8 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
         unlockSM.handle(EVENT_UNLOCK, -1, password);
     }
 
-    private interface State {
-
-        void handle(StateMachine.Context context, int event, int arg, Object o);
-    }
-
-    private static class StateMachine {
-
-        protected static class Context {
-
-            private final StateMachine machine;
-            private final Bundle bundle = new Bundle();
-
-            public Context(StateMachine machine) {
-                this.machine = machine;
-            }
-
-            public void handle(int event, int arg, Object o) {
-                this.machine.handle(event, arg, o);
-            }
-
-            public void setState(State newState) {
-                this.machine.setState(newState);
-            }
-
-            public void putString(String key, String val) {
-                bundle.putString(key, val);
-            }
-
-            public String getString(String key, String defaultVal) {
-                return bundle.getString(key, defaultVal);
-            }
-        }
-
-        private Context context = new Context(this);
-        private State state = null;
-
-        protected synchronized void init(State initState) {
-            if (state != null) {
-                throw new IllegalStateException("initial state already exists");
-            }
-
-            this.state = initState;
-        }
-
-        public synchronized void handle(int event, int arg, Object o) {
-            Log.i(TAG, "state=" + state + ", event=" + event);
-            state.handle(context, event, arg, o);
-        }
-
-        void setState(State newState) {
-            this.state = newState;
-        }
-    }
-
-    private static final int EVENT_DISCONNECTED = 1;
-    private static final int EVENT_READY = 2;
-    private static final int EVENT_UNLOCK = 3;
+    private static final int EVENT_DEV_STATE_CHANGED = 1;
+    private static final int EVENT_UNLOCK = 2;
 
     private final State IDLE = new IdleState();
     private final State WAIT_FOR_DISCONNECT = new WaitForDisconnectState();
@@ -277,7 +225,7 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
 
     private class IdleState implements State {
         @Override
-        public void handle(StateMachine.Context context, int event, int arg, Object o) {
+        public void handle(Context context, int event, int arg, Object o) {
             switch (event) {
                 case EVENT_UNLOCK:
                     handleUnlock(context, arg, o);
@@ -287,7 +235,7 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
             }
         }
 
-        private void handleUnlock(StateMachine.Context context, int arg, Object o) {
+        private void handleUnlock(Context context, int arg, Object o) {
             if (!(o instanceof String)) {
                 Log.e(TAG, "bad argument, string password expected");
                 return;
@@ -302,7 +250,7 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
             connect(context, arg, o);
         }
 
-        private void connect(StateMachine.Context context, int arg, Object o) {
+        private void connect(Context context, int arg, Object o) {
             BtLeDevice.State state = mDevice.getState();
             log("connect: current-state=" + state);
 
@@ -326,11 +274,16 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
 
     private class WaitForDisconnectState implements State {
         @Override
-        public void handle(StateMachine.Context context, int event, int arg, Object o) {
+        public void handle(Context context, int event, int arg, Object o) {
             switch (event) {
-                case EVENT_DISCONNECTED:
-                    mDevice.connectGatt(ShowDeviceActivity.this);
-                    context.setState(WAIT_FOR_CONNECT);
+                case EVENT_DEV_STATE_CHANGED:
+                    BtLeDevice.State state = (BtLeDevice.State) o;
+                    if (state == BtLeDevice.State.DISCONNECTED) {
+                        mDevice.connectGatt(ShowDeviceActivity.this);
+                        context.setState(WAIT_FOR_CONNECT);
+                    } else {
+                        log("expect disconnect event, received: " + state);
+                    }
                     break;
                 default:
                     // ignore
@@ -341,9 +294,21 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
 
     private class WaitForConnectState implements State {
         @Override
-        public void handle(StateMachine.Context context, int event, int arg, Object o) {
+        public void handle(Context context, int event, int arg, Object o) {
             switch (event) {
-                case EVENT_READY:
+                case EVENT_DEV_STATE_CHANGED:
+                    BtLeDevice.State state = (BtLeDevice.State) o;
+                    handleStateChanged(context, state);
+                    break;
+                default:
+                    // ignore
+                    break;
+            }
+        }
+
+        private void handleStateChanged(Context context, BtLeDevice.State state) {
+            switch (state) {
+                case READY:
                     context.setState(READY);
                     String password = context.getString("password", null);
                     log("context password: " + password);
@@ -352,7 +317,6 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
                     }
                     break;
                 default:
-                    // ignore
                     break;
             }
         }
@@ -360,8 +324,13 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
 
     private class ReadyState implements State {
         @Override
-        public void handle(StateMachine.Context context, int event, int arg, Object o) {
+        public void handle(Context context, int event, int arg, Object o) {
             switch (event) {
+                case EVENT_DEV_STATE_CHANGED:
+                    // BtLeDevice.State state = (BtLeDevice.State) o;
+                    // handleStateChanged(context, state);
+                    context.setState(IDLE);
+                    break;
                 case EVENT_UNLOCK:
                     String password = context.getString("password", null);
                     if (password == null) {
@@ -498,17 +467,18 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
     public void onDeviceStateChanged(final BtLeDevice.State state) {
         Log.e(TAG, "new state: " + state);
 
-        switch (state) {
-            case DISCONNECTED:
-                unlockSM.handle(EVENT_DISCONNECTED, -1, null);
-                break;
-            case READY:
-                unlockSM.handle(EVENT_READY, -1, null);
-                break;
-            default:
-                // ignore
-                break;
-        }
+        unlockSM.handle(EVENT_DEV_STATE_CHANGED, -1, state);
+        //switch (state) {
+        //    case DISCONNECTED:
+        //        unlockSM.handle(EVENT_DISCONNECTED, -1, null);
+        //        break;
+        //    case READY:
+        //        unlockSM.handle(EVENT_READY, -1, null);
+        //        break;
+        //    default:
+        //        // ignore
+        //        break;
+        //}
 
         runOnUiThread(new Runnable() {
             @Override
