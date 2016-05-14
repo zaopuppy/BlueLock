@@ -175,6 +175,7 @@ public class SelectDeviceActivity extends AppCompatActivity {
                 bundle.putString("addr", device.getAddress());
 
                 Intent intent = new Intent(SelectDeviceActivity.this, ShowDeviceActivity.class);
+                // Intent intent = new Intent(SelectDeviceActivity.this, ModifyPasswordActivity.class);
                 intent.putExtras(bundle);
 
                 startActivity(intent);

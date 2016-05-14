@@ -2,24 +2,20 @@ package com.example.zero.androidskeleton.ui;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import com.example.zero.androidskeleton.R;
+import com.example.zero.androidskeleton.bt.BlueLockProtocol;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
-import com.example.zero.androidskeleton.bt.BtLeUtil;
-import com.example.zero.androidskeleton.bt.BlueLockProtocol;
+import com.example.zero.androidskeleton.log.Log;
 import com.example.zero.androidskeleton.state.Context;
 import com.example.zero.androidskeleton.state.State;
 import com.example.zero.androidskeleton.state.StateMachine;
@@ -325,104 +321,12 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
      * CONNECT --> OPEN --> TRANSFER-NUM -> DONE
      */
     private class UnlockSM extends StateMachine {
-        public UnlockSM() {
+        UnlockSM() {
             init(IDLE);
         }
     }
 
     private final UnlockSM unlockSM = new UnlockSM();
-
-    private String mPassword = "";
-    private AlertDialog createPasswordDialog() {
-        // create password view
-        View passView = getLayoutInflater().inflate(R.layout.input_password, null);
-        final EditText passText = (EditText) passView.findViewById(R.id.password_edit);
-        assert passText != null;
-
-        // create dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        return builder
-            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    try {
-                        mPassword = passText.getText().toString();
-                        open(mPassword);
-                    } catch (NumberFormatException e) {
-                        log("invalid password");
-                    }
-                }
-            })
-            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Utils.makeToast(ShowDeviceActivity.this, "Cancel");
-                }
-            })
-            .setView(passView)
-            .create();
-    }
-
-    private void open(final String password) {
-        if (mDevice.getState() != BtLeDevice.State.READY) {
-            Utils.makeToast(ShowDeviceActivity.this, "device is not yet ready");
-            return;
-        }
-
-        BluetoothGattCharacteristic characteristic1 = null;
-        BluetoothGattCharacteristic characteristic2 = null;
-        BluetoothGattCharacteristic characteristic3 = null;
-        BluetoothGattCharacteristic characteristic4 = null;
-
-        for (BluetoothGattService service : mDevice.getServiceList()) {
-            Log.i(TAG, "service: " + BtLeUtil.uuidStr(service.getUuid()));
-
-            for (final BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
-                final int uuid16 = BtLeUtil.extractBtUuid(characteristic.getUuid());
-                if (BtLeUtil.isReservedUuid(uuid16)) {
-                    continue;
-                }
-
-                switch (uuid16) {
-                    case 0xfff1:
-                        characteristic1 = characteristic;
-                        break;
-                    case 0xfff2:
-                        characteristic2 = characteristic;
-                        break;
-                    case 0xfff3:
-                        characteristic3 = characteristic;
-                        break;
-                    case 0xfff4:
-                        characteristic4 = characteristic;
-                        break;
-                    default:
-                        // ignore
-                        break;
-                }
-            }
-        }
-
-        mDevice.makeNotify(characteristic4, new BtLeDevice.ResultListener<Boolean>() {
-            @Override
-            public void onResult(Boolean result) {
-                Log.e(TAG, "make notify: " + result);
-            }
-        });
-
-        byte[] msg = BlueLockProtocol.unlock(password);
-        if (msg == null) {
-            log("invalid password?");
-            return;
-        }
-        mDevice.writeCharacteristic(characteristic1, msg, new BtLeDevice.ResultListener<Boolean>() {
-            @Override
-            public void onResult(Boolean result) {
-                Log.e(TAG, "write result: " + result);
-            }
-        });
-    }
-
 
     @Override
     public void onDeviceStateChanged(final BtLeDevice.State state) {
@@ -447,35 +351,10 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
         }
 
         final byte result = characteristic.getValue()[0];
-        final String resultStr;
-        switch (result) {
-            case BlueLockProtocol.RESULT_PASSWORD_CORRECT: {
-                resultStr = "开门密码正确";
-                Log.d(TAG, "save password: " + mPassword);
-                // BtDeviceStorage.INSTANCE.put(mDevice.getAddress(), mPassword);
-                break;
-            }
-            case BlueLockProtocol.RESULT_PASSWORD_WRONG: {
-                resultStr = "开门密码错误";
-                Log.d(TAG, "bad password clear: " + mPassword);
-                // BtDeviceStorage.INSTANCE.put(mDevice.getAddress(), -1);
-                break;
-            }
-            case BlueLockProtocol.RESULT_PASSWORD_CHANGED: {
-                resultStr = "修改密码成功";
-                Log.d(TAG, "password changed: " + mPassword);
-                // BtDeviceStorage.INSTANCE.put(mDevice.getAddress(), mPassword);
-                break;
-            }
-            default: {
-                resultStr = "" + result;
-                break;
-            }
-        }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                log("result: " + resultStr);
+                Utils.makeToast(getApplicationContext(), BlueLockProtocol.getCodeDesc(result));
             }
         });
     }

@@ -11,6 +11,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
+ *
  * Created by zero on 2016/4/8.
  */
 public class BtLeDevice extends BluetoothGattCallback {
@@ -23,7 +24,7 @@ public class BtLeDevice extends BluetoothGattCallback {
         CONNECTED,
         DISCOVERING_SERVICE,
         READY,
-        DISCONNECTING, devState,
+        DISCONNECTING,
     }
 
     public interface ResultListener<T> {
@@ -72,11 +73,8 @@ public class BtLeDevice extends BluetoothGattCallback {
 
         @Override
         public boolean exec() {
-            if (!innerReadCharacteristic(gatt, characteristic)) {
-                return false;
-            }
+            return innerReadCharacteristic(gatt, characteristic);
 
-            return true;
         }
 
         @Override
@@ -90,11 +88,15 @@ public class BtLeDevice extends BluetoothGattCallback {
                         + ", actual=" + BtLeUtil.uuidStr(characteristic.getUuid()));
             }
             if (status != BluetoothGatt.GATT_SUCCESS) {
-                listener.onResult(null);
+                if (listener != null) {
+                    listener.onResult(null);
+                }
                 return;
             }
 
-            listener.onResult(characteristic.getValue());
+            if (listener != null) {
+                listener.onResult(characteristic.getValue());
+            }
         }
 
         @Override
@@ -155,11 +157,15 @@ public class BtLeDevice extends BluetoothGattCallback {
             }
 
             if (status != BluetoothGatt.GATT_SUCCESS) {
-                listener.onResult(false);
+                if (listener != null) {
+                    listener.onResult(false);
+                }
                 return;
             }
 
-            listener.onResult(true);
+            if (listener != null) {
+                listener.onResult(true);
+            }
         }
     }
 
@@ -209,11 +215,15 @@ public class BtLeDevice extends BluetoothGattCallback {
             }
 
             if (status != BluetoothGatt.GATT_SUCCESS) {
-                listener.onResult(false);
+                if (listener != null) {
+                    listener.onResult(false);
+                }
                 return;
             }
 
-            listener.onResult(true);
+            if (listener != null) {
+                listener.onResult(true);
+            }
         }
     }
 
@@ -239,7 +249,7 @@ public class BtLeDevice extends BluetoothGattCallback {
         }
     }
 
-    public BtLeDevice(BluetoothDevice device) {
+    BtLeDevice(BluetoothDevice device) {
         mDevice = device;
     }
 
@@ -343,10 +353,15 @@ public class BtLeDevice extends BluetoothGattCallback {
 
         Log.e(TAG, "device is ready, service count: " + service_list.size());
 
+        BluetoothGattCharacteristic char4 = getCharacteristic(0xfff4);
+        if (char4 != null) {
+            makeNotify(char4, null);
+        }
+
         setState(State.READY);
     }
 
-    public boolean makeNotify(BluetoothGattCharacteristic characteristic, ResultListener<Boolean> listener) {
+    private boolean makeNotify(BluetoothGattCharacteristic characteristic, ResultListener<Boolean> listener) {
         //int prop = characteristic.getProperties();
         //if (Utils.isFlagSet(prop, BluetoothGattCharacteristic.PROPERTY_NOTIFY)) {
         //    Log.d(TAG, BtLeService.uuidStr(characteristic.getUuid()) + " already notify");

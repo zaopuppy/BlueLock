@@ -2,6 +2,7 @@ package com.example.zero.androidskeleton.ui;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -29,19 +30,43 @@ public class ModifyPasswordActivity extends AppCompatActivity implements BtLeDev
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_modify_password);
 
+        Intent intent = getIntent();
+        if (intent == null || intent.getExtras() == null) {
+            finish();
+            return;
+        }
+        Bundle bundle = intent.getExtras();
+
+        mDevice = BtLeService.INSTANCE.getDevice(bundle.getString("addr"));
+        if (mDevice == null) {
+            Utils.makeToast(getApplicationContext(), "no device supplied");
+            finish();
+            return;
+        }
+
         setupUiComp();
+    }
 
+    @Override
+    protected void onResume() {
+        mDevice.addDeviceListener(this);
+        super.onResume();
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mDevice.removeDeviceListener(this);
     }
 
     private void setupUiComp() {
-        EditText managerPasswordEdit = (EditText) findViewById(R.id.admin_password_edit);
-        assert managerPasswordEdit != null;
+        final EditText adminPasswordEdit = (EditText) findViewById(R.id.admin_password_edit);
+        assert adminPasswordEdit != null;
 
-        EditText oldPasswordEdit = (EditText) findViewById(R.id.password_edit);
-        assert oldPasswordEdit != null;
+        final EditText passwordEdit = (EditText) findViewById(R.id.password_edit);
+        assert passwordEdit != null;
 
-        EditText newPasswordEdit = (EditText) findViewById(R.id.new_password_edit);
+        final EditText newPasswordEdit = (EditText) findViewById(R.id.new_password_edit);
         assert newPasswordEdit != null;
 
         Button cancelButton = (Button) findViewById(R.id.cancel_button);
@@ -60,12 +85,30 @@ public class ModifyPasswordActivity extends AppCompatActivity implements BtLeDev
         confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //
+                ModifyPasswordData data = new ModifyPasswordData(
+                    mDevice.getAddress(),
+                    adminPasswordEdit.getText().toString(),
+                    passwordEdit.getText().toString(),
+                    newPasswordEdit.getText().toString());
+
+                if (!data.isValid()) {
+                    Utils.makeToast(getApplicationContext(), "bad password, please check again");
+                    return;
+                }
+
+                modify(data);
             }
         });
     }
 
-    private final ModifyPasswordSM modifyPasswordSM = new ModifyPasswordSM();
+    private static final int EVENT_MODIFY = 1;
+    private static final int EVENT_DEV_STATE_CHANGED = 2;
+    private static final int EVENT_DEV_NOTIFY = 3;
+
+    private final State IDLE = new IdleState();
+    private final State WAIT_FOR_DISCONNECT = new WaitForDisconnectState();
+    private final State WAIT_FOR_CONNECT = new WaitForConnectState();
+    private final State READY = new ReadyState();
 
     private static class ModifyPasswordData {
         final String addr;
@@ -78,6 +121,30 @@ public class ModifyPasswordActivity extends AppCompatActivity implements BtLeDev
             this.adminPassword = adminPassword;
             this.password = password;
             this.newPassword = newPassword;
+        }
+
+        boolean isValid() {
+            if (addr == null || addr.length() <= 0) {
+                Log.i(TAG, "bad address");
+                return false;
+            }
+
+            if (adminPassword == null || adminPassword.length() != 6) {
+                Log.i(TAG, "bad admin password");
+                return false;
+            }
+
+            if (password == null || password.length() != 6) {
+                Log.i(TAG, "bad old password");
+                return false;
+            }
+
+            if (newPassword == null || newPassword.length() != 6) {
+                Log.i(TAG, "bad new password");
+                return false;
+            }
+
+            return true;
         }
     }
 
@@ -208,6 +275,13 @@ public class ModifyPasswordActivity extends AppCompatActivity implements BtLeDev
                             Log.w(TAG, "wrote admin-password: " + result);
                         }
                     });
+                    mDevice.writeCharacteristic(char1, BlueLockProtocol.modify(data.newPassword), new BtLeDevice.ResultListener<Boolean>() {
+                        @Override
+                        public void onResult(Boolean result) {
+                            Log.w(TAG, "modify new-password: " + result);
+                        }
+                    });
+                    // context.setState();
                     break;
                 default:
                     // ignore
@@ -217,20 +291,13 @@ public class ModifyPasswordActivity extends AppCompatActivity implements BtLeDev
     }
 
 
-    private static final int EVENT_MODIFY = 1;
-    private static final int EVENT_DEV_STATE_CHANGED = 2;
-    private static final int EVENT_DEV_NOTIFY = 3;
-
-    private final State IDLE = new IdleState();
-    private final State WAIT_FOR_DISCONNECT = new WaitForDisconnectState();
-    private final State WAIT_FOR_CONNECT = new WaitForConnectState();
-    private final State READY = new ReadyState();
-
     private class ModifyPasswordSM extends StateMachine {
         ModifyPasswordSM() {
             init(IDLE);
         }
     }
+
+    private final ModifyPasswordSM modifyPasswordSM = new ModifyPasswordSM();
 
     @Override
     public void onDeviceStateChanged(BtLeDevice.State state) {
@@ -245,7 +312,19 @@ public class ModifyPasswordActivity extends AppCompatActivity implements BtLeDev
             return;
         }
         final byte result = values[0];
+
         modifyPasswordSM.handle(EVENT_DEV_NOTIFY, result, null);
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Utils.makeToast(getApplicationContext(), BlueLockProtocol.getCodeDesc(result));
+            }
+        });
+    }
+
+    private void modify(ModifyPasswordData data) {
+        modifyPasswordSM.handle(EVENT_MODIFY, -1, data);
     }
 
 }
