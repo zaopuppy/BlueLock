@@ -48,19 +48,15 @@ public class DoorProtocol {
      * @param password
      * @return
      */
-    public static byte[] openDoor(int password) {
-        if (password < 0 || password >= 1000000) {
+    public static byte[] openDoor(String password) {
+        if (password == null || password.length() != 6) {
             return null;
         }
 
         synchronized (BUFFER) {
             BUFFER.clear();
             BUFFER.put((byte) 0x0A);
-            for (int i = 0; i < 6; ++i) {
-                byte b = (byte) (password % 10);
-                BUFFER.put(b);
-                password = password / 10;
-            }
+            BUFFER.put(encode(password));
             BUFFER.put((byte) 0x0B);
             BUFFER.flip();
             byte[] b = new byte[BUFFER.remaining()];
@@ -69,7 +65,7 @@ public class DoorProtocol {
         }
     }
 
-    public static void openDoor(final BtLeDevice device, final int password) {
+    public static void openDoor(final BtLeDevice device, final String password) {
         if (device.getState() != BtLeDevice.State.READY) {
             Log.w(TAG, "device is not ready yet");
             return;
