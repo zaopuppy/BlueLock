@@ -159,18 +159,6 @@ public class SelectDeviceActivity extends AppCompatActivity {
 
     private ToggleButton mAutoButton;
     private void setupUiComp() {
-        mAutoButton = (ToggleButton) findViewById(R.id.auto_button);
-        assert mAutoButton != null;
-        mAutoButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    stopScan();
-                    startScan();
-                }
-            }
-        });
-
         ListView device_list_view = (ListView) findViewById(R.id.device_list_view);
         assert device_list_view != null;
         device_list_view.setAdapter(mListViewAdapter);

@@ -1,21 +1,15 @@
 package com.example.zero.androidskeleton.ui;
 
-import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.*;
 import android.content.Intent;
 import android.os.ParcelUuid;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import com.example.zero.androidskeleton.R;
-import com.example.zero.androidskeleton.bt.DoorProtocol;
-import com.example.zero.androidskeleton.utils.Utils;
-
-import java.util.UUID;
-import java.util.zip.CRC32;
+import com.example.zero.androidskeleton.bt.BlueLockProtocol;
 
 /**
  * http://stackoverflow.com/questions/18315508/is-it-possible-in-android-to-transmit-broadcast-mode-in-ble
@@ -100,7 +94,7 @@ public class BroadcastDeviceActivity extends BaseActivity {
         // build data
         ParcelUuid uuid = ParcelUuid.fromString("887B0D8B-768C-42FB-B3F5-1B87E3F16EAE");
         AdvertiseData data = new AdvertiseData.Builder()
-            .addServiceData(uuid, DoorProtocol.openDoorV2("123456", "18600091651"))
+            .addServiceData(uuid, BlueLockProtocol.openDoorV2("123456", "18600091651"))
             .build();
 
         advertiser.startAdvertising(settings, data, new AdvertiseCallback() {

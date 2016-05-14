@@ -1,6 +1,7 @@
 package com.example.zero.androidskeleton.state;
 
 import android.os.Bundle;
+import android.util.ArrayMap;
 
 /**
  * Created by zero on 5/14/16.
@@ -8,7 +9,8 @@ import android.os.Bundle;
 public class Context {
 
     private final StateMachine machine;
-    private final Bundle bundle = new Bundle();
+
+    private final ArrayMap<String, Object> dataMap = new ArrayMap<>();
 
     public Context(StateMachine machine) {
         this.machine = machine;
@@ -23,10 +25,23 @@ public class Context {
     }
 
     public void putString(String key, String val) {
-        bundle.putString(key, val);
+        dataMap.put(key, val);
     }
 
     public String getString(String key, String defaultVal) {
-        return bundle.getString(key, defaultVal);
+        Object v = dataMap.get(key);
+        if (v == null) {
+            return defaultVal;
+        }
+        return (String)v;
+    }
+
+    // TODO: support object saving
+    public void putObject(String key, Object o) {
+        dataMap.put(key, o);
+    }
+
+    public Object getObject(String key) {
+        return dataMap.get(key);
     }
 }

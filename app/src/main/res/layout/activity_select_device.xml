@@ -9,32 +9,10 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.zero.androidskeleton.ui.SelectDeviceActivity">
 
-    <TextView
-        android:id="@+id/label_for_auto_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/auto_button"
-        android:text="范围内自动开门"/>
-
-    <ToggleButton
-        android:id="@+id/auto_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:layout_toEndOf="@id/label_for_auto_button"
-        android:text="Auto"/>
-
-    <!--<Button-->
-        <!--android:id="@+id/clean_button"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_toRightOf="@id/scan_button"-->
-        <!--android:text="Clean"/>-->
-
     <ListView
         android:id="@+id/device_list_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/auto_button"/>
+        />
 
 </RelativeLayout>

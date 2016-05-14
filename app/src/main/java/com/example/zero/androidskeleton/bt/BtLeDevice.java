@@ -23,7 +23,7 @@ public class BtLeDevice extends BluetoothGattCallback {
         CONNECTED,
         DISCOVERING_SERVICE,
         READY,
-        DISCONNECTING,
+        DISCONNECTING, devState,
     }
 
     public interface ResultListener<T> {

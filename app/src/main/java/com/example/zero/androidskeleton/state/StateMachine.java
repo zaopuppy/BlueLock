@@ -28,4 +28,12 @@ public class StateMachine {
     void setState(State newState) {
         this.state = newState;
     }
+
+    public State getState() {
+        return this.state;
+    }
+
+    Context getContext() {
+        return context;
+    }
 }

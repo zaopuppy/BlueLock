@@ -19,7 +19,7 @@ import com.example.zero.androidskeleton.R;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
 import com.example.zero.androidskeleton.bt.BtLeUtil;
-import com.example.zero.androidskeleton.bt.DoorProtocol;
+import com.example.zero.androidskeleton.bt.BlueLockProtocol;
 import com.example.zero.androidskeleton.state.Context;
 import com.example.zero.androidskeleton.state.State;
 import com.example.zero.androidskeleton.state.StateMachine;
@@ -160,7 +160,12 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
         unlockImg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                unlock(passwordEdit.getText().toString());
+                String password = passwordEdit.getText().toString();
+                if (password.length() != 6) {
+                    Utils.makeToast(getApplicationContext(), "password incorrect");
+                    return;
+                }
+                unlock(password);
             }
         });
     }
@@ -224,7 +229,6 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
                     context.setState(WAIT_FOR_DISCONNECT);
                     break;
             }
-
         }
     }
 
@@ -299,7 +303,7 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
                         log("failed to get characteristic 0xfff1");
                         return;
                     }
-                    mDevice.writeCharacteristic(char1, DoorProtocol.openDoor(password), new BtLeDevice.ResultListener<Boolean>() {
+                    mDevice.writeCharacteristic(char1, BlueLockProtocol.unlock(password), new BtLeDevice.ResultListener<Boolean>() {
                         @Override
                         public void onResult(Boolean result) {
                             log("wrote password: " + result);
@@ -406,7 +410,7 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
             }
         });
 
-        byte[] msg = DoorProtocol.openDoor(password);
+        byte[] msg = BlueLockProtocol.unlock(password);
         if (msg == null) {
             log("invalid password?");
             return;
@@ -445,19 +449,19 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
         final byte result = characteristic.getValue()[0];
         final String resultStr;
         switch (result) {
-            case DoorProtocol.RESULT_PASSWORD_CORRECT: {
+            case BlueLockProtocol.RESULT_PASSWORD_CORRECT: {
                 resultStr = "开门密码正确";
                 Log.d(TAG, "save password: " + mPassword);
                 // BtDeviceStorage.INSTANCE.put(mDevice.getAddress(), mPassword);
                 break;
             }
-            case DoorProtocol.RESULT_PASSWORD_WRONG: {
+            case BlueLockProtocol.RESULT_PASSWORD_WRONG: {
                 resultStr = "开门密码错误";
                 Log.d(TAG, "bad password clear: " + mPassword);
                 // BtDeviceStorage.INSTANCE.put(mDevice.getAddress(), -1);
                 break;
             }
-            case DoorProtocol.RESULT_PASSWORD_CHANGED: {
+            case BlueLockProtocol.RESULT_PASSWORD_CHANGED: {
                 resultStr = "修改密码成功";
                 Log.d(TAG, "password changed: " + mPassword);
                 // BtDeviceStorage.INSTANCE.put(mDevice.getAddress(), mPassword);
