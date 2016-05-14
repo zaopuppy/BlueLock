@@ -4,6 +4,7 @@ import android.os.Environment;
 import com.example.zero.androidskeleton.utils.Counter;
 
 import java.io.*;
+import java.nio.charset.Charset;
 
 /**
  * Created by zero on 5/14/16.
@@ -44,7 +45,7 @@ public class Log {
 
         if (logWriter == null) {
             try {
-                logWriter = new OutputStreamWriter(new FileOutputStream(logFile));
+                logWriter = new OutputStreamWriter(new FileOutputStream(logFile), Charset.forName("UTF-8"));
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 return;
