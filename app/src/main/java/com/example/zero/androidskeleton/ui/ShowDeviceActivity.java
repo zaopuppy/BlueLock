@@ -368,12 +368,20 @@ public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.Devic
                         @Override
                         public void onResult(Boolean result) {
                             Log.d(TAG, "wrote password: " + result);
-                            if (result) {
-                                /* TODO: pass phone number */
-                                /* mDevice.writeCharacteristic(); */
-                            }
                         }
                     });
+                    String phoneNum = Utils.getPhoneNum(getApplicationContext());
+                    if (phoneNum == null || phoneNum.length() != 11) {
+                        Utils.makeToast(getApplicationContext(), "invalid phone number read: " + phoneNum);
+                        return;
+                    }
+                    mDevice.writeCharacteristic(char1, BlueLockProtocol.passPhone(phoneNum), new BtLeDevice.ResultListener<Boolean>() {
+                        @Override
+                        public void onResult(Boolean result) {
+                            Log.d(TAG, "wrote phone num: " + result);
+                        }
+                    });
+
                     break;
                 default:
                     // ignore

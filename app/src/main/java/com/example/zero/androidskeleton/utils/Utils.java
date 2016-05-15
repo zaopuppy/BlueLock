@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.telephony.TelephonyManager;
 import android.widget.Toast;
 
 import java.util.UUID;
@@ -45,12 +46,22 @@ public class Utils {
         }
     }
 
-    private static void checkMyPermission(Activity activity, String permission) {
+    public static void checkMyPermission(Activity activity, String permission) {
         int result = ContextCompat.checkSelfPermission(activity.getApplicationContext(), permission);
         if (result == PackageManager.PERMISSION_GRANTED) {
             return;
         }
 
         ActivityCompat.requestPermissions(activity, new String[] { permission }, 0);
+    }
+
+    /**
+     * require permission: "android.permission.READ_PHONE_STATE"
+     * @param context
+     * @return
+     */
+    public static String getPhoneNum(Context context) {
+        TelephonyManager manager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        return manager.getLine1Number();
     }
 }

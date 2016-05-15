@@ -11,6 +11,8 @@
     <!-- for shaking unlock -->
     <uses-permission android:name="android.hardware.sensor.accelerometer" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- for reading phone number -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <application
         android:name=".Application"

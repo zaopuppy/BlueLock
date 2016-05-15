@@ -28,7 +28,7 @@ public class SplashActivity extends BaseActivity {
         setContentView(R.layout.activity_splash);
 
         // FOR DEBUGGING ONLY
-        // GlobalObjects.unlockMode = GlobalObjects.UNLOCK_MODE_AUTO;
+        GlobalObjects.unlockMode = GlobalObjects.UNLOCK_MODE_SHAKE;
 
         GlobalObjects.timer.schedule(new TimerTask() {
             @Override
@@ -36,9 +36,10 @@ public class SplashActivity extends BaseActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Intent intent = new Intent(SplashActivity.this, SelectDeviceActivity.class);
+                        Intent intent = new Intent(SplashActivity.this, BroadcastDeviceActivity.class);
                         startActivity(intent);
                         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                        finish();
                     }
                 });
             }
