@@ -8,6 +8,9 @@
     <!-- for log reading/writing -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- for shaking unlock -->
+    <uses-permission android:name="android.hardware.sensor.accelerometer" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:name=".Application"

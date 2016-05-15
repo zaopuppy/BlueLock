@@ -1,15 +1,24 @@
 package com.example.zero.androidskeleton.ui;
 
+import android.app.Service;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.support.v7.app.ActionBar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import com.example.zero.androidskeleton.GlobalObjects;
 import com.example.zero.androidskeleton.R;
 import com.example.zero.androidskeleton.bt.BlueLockProtocol;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
@@ -22,14 +31,16 @@ import com.example.zero.androidskeleton.utils.Utils;
 
 /**
  *
- * * check if system support bluetooth-le
- * * auto in range unlock
- * * report mobile phone number
  */
-public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.DeviceListener {
+public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.DeviceListener, SensorEventListener {
     private static final String TAG = "ShowDeviceActivity";
 
     private BtLeDevice mDevice = null;
+
+    private SensorManager mSensorManager = null;
+    private Vibrator mVibrator = null;
+
+    private EditText mPasswordEdit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,8 +69,81 @@ public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.Devic
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        setUiComp();
+        setupUiComp();
 
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        mVibrator = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
+    }
+
+    private void setupUiComp() {
+        mPasswordEdit = (EditText) findViewById(R.id.password_edit);
+        assert mPasswordEdit != null;
+
+        ImageView unlockImg = (ImageView) findViewById(R.id.icon_mode_img);
+        assert unlockImg != null;
+
+        // 根据不同的模式决定界面如何显示
+        switch (GlobalObjects.unlockMode) {
+            case GlobalObjects.UNLOCK_MODE_MANUNAL: {
+                unlockImg.setImageResource(R.drawable.icon_green_manual);
+                unlockImg.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String password = mPasswordEdit.getText().toString();
+                        if (password.length() != 6) {
+                            Utils.makeToast(getApplicationContext(), "password incorrect");
+                            return;
+                        }
+                        unlock(password);
+                    }
+                });
+                break;
+            }
+            case GlobalObjects.UNLOCK_MODE_AUTO: {
+                unlockImg.setImageResource(R.drawable.icon_green_auto);
+                mPasswordEdit.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        String password = mPasswordEdit.getText().toString();
+                        if (password.length() != 6) {
+                            return;
+                        }
+
+                        // cancel previous task
+                        // unlockSM.handle(EVENT_CANCEL, -1, null);
+
+                        // try this one
+                        unlockSM.handle(EVENT_UNLOCK, -1, password);
+                    }
+                });
+                break;
+            }
+            case GlobalObjects.UNLOCK_MODE_SHAKE: {
+                unlockImg.setImageResource(R.drawable.icon_green_rock);
+                unlockImg.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String password = mPasswordEdit.getText().toString();
+                        if (password.length() != 6) {
+                            Utils.makeToast(getApplicationContext(), "password incorrect");
+                            return;
+                        }
+                        unlock(password);
+                    }
+                });
+                break;
+            }
+            default:
+                break;
+        }
     }
 
     @Override
@@ -130,6 +214,7 @@ public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.Devic
         if (mDevice != null) {
             mDevice.addDeviceListener(this);
         }
+        mSensorManager.unregisterListener(this);
         super.onResume();
     }
 
@@ -139,26 +224,11 @@ public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.Devic
             mDevice.removeDeviceListener(this);
             mDevice.disconnectGatt();
         }
+        mSensorManager.registerListener(
+            this,
+            mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+            SensorManager.SENSOR_DELAY_NORMAL);
         super.onPause();
-    }
-
-    private void setUiComp() {
-        final EditText passwordEdit = (EditText) findViewById(R.id.password_edit);
-        assert passwordEdit != null;
-
-        ImageView unlockImg = (ImageView) findViewById(R.id.icon_mode_img);
-        assert unlockImg != null;
-        unlockImg.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String password = passwordEdit.getText().toString();
-                if (password.length() != 6) {
-                    Utils.makeToast(getApplicationContext(), "password incorrect");
-                    return;
-                }
-                unlock(password);
-            }
-        });
     }
 
     private void unlock(String password) {
@@ -323,6 +393,16 @@ public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.Devic
 
     private final UnlockSM unlockSM = new UnlockSM();
 
+    private class AutoUnlockTask extends Thread {
+        private boolean isStop;
+        @Override
+        public void run() {
+            // TODO
+        }
+    }
+
+    private final Thread autoUnlockTask = new Thread(new AutoUnlockTask());
+
     @Override
     public void onDeviceStateChanged(final BtLeDevice.State state) {
         Log.e(TAG, "new state: " + state);
@@ -352,5 +432,34 @@ public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.Devic
                 Utils.makeToast(getApplicationContext(), BlueLockProtocol.getCodeDesc(result));
             }
         });
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (GlobalObjects.unlockMode != GlobalObjects.UNLOCK_MODE_SHAKE) {
+            return;
+        }
+
+        int sensorType = event.sensor.getType();
+        float[] values = event.values;
+        if (sensorType == Sensor.TYPE_ACCELEROMETER) {
+            if ((Math.abs(values[0]) > 17 || Math.abs(values[1]) > 17 || Math.abs(values[2]) > 17)) {
+                Log.d("sensor x ", "============ values[0] = " + values[0]);
+                Log.d("sensor y ", "============ values[1] = " + values[1]);
+                Log.d("sensor z ", "============ values[2] = " + values[2]);
+                mVibrator.vibrate(500);
+
+                String password = mPasswordEdit.getText().toString();
+                if (password.length() == 6) {
+                    unlock(password);
+                } else {
+                    Utils.makeToast(getApplicationContext(), "bad password");
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 }

@@ -27,6 +27,9 @@ public class SplashActivity extends BaseActivity {
 
         setContentView(R.layout.activity_splash);
 
+        // FOR DEBUGGING ONLY
+        // GlobalObjects.unlockMode = GlobalObjects.UNLOCK_MODE_AUTO;
+
         GlobalObjects.timer.schedule(new TimerTask() {
             @Override
             public void run() {

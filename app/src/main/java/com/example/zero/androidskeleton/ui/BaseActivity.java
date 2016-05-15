@@ -19,7 +19,8 @@ public class BaseActivity extends AppCompatActivity {
             Manifest.permission.BLUETOOTH_ADMIN,
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.VIBRATE);
     }
 
     @Override

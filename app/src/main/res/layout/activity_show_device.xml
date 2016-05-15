@@ -28,7 +28,7 @@
         android:layout_width="180dp"
         android:layout_height="180dp"
         android:layout_centerHorizontal="true"
-        android:src="@drawable/icon_green_manual"
+        android:src="@drawable/icon_green_auto"
         />
 
     <ImageView
