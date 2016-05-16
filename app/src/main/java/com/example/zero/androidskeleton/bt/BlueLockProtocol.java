@@ -5,12 +5,11 @@ import android.util.Log;
 import com.example.zero.androidskeleton.utils.CRC16;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 
 /**
  * Created by zero on 4/11/16.
  */
-public class DoorProtocol {
+public class BlueLockProtocol {
 
     private static final String TAG = "DoorProtocol";
 
@@ -24,6 +23,27 @@ public class DoorProtocol {
     public static final byte RESULT_PASSWORD_CHANGED       = 0x05;
     public static final byte RESULT_PHONE_NUMBER_PASSED    = 0x06;
     public static final byte RESULT_PHONE_NUMBER_NO_PASSED = 0x07;
+
+    public static String getCodeDesc(byte code) {
+        switch (code) {
+            case RESULT_PASSWORD_CORRECT:
+                return "开门密码正确";
+            case RESULT_PASSWORD_WRONG:
+                return "开门密码错误";
+            case RESULT_ADMIN_PASSWORD_CORRECT:
+                return "管理员身份验证通过";
+            case RESULT_ADMIN_PASSWORD_WRONG:
+                return "管理员身份验证失败";
+            case RESULT_PASSWORD_CHANGED:
+                return "修改密码成功";
+            case RESULT_PHONE_NUMBER_PASSED:
+                return "手机号码透传成功";
+            case RESULT_PHONE_NUMBER_NO_PASSED:
+                return "手机号码透传失败";
+            default:
+                return "<unknown: " + code + '>';
+        }
+    }
 
     /**
      * 1234 -> b'01020304'
@@ -48,52 +68,88 @@ public class DoorProtocol {
      * @param password
      * @return
      */
-    public static byte[] openDoor(int password) {
-        if (password < 0 || password >= 1000000) {
+    public static byte[] unlock(String password) {
+        Log.i(TAG, "unlock: [" + password + "]");
+        if (password == null || password.length() != 6) {
+            Log.e(TAG, "bad password");
             return null;
         }
 
         synchronized (BUFFER) {
             BUFFER.clear();
+
             BUFFER.put((byte) 0x0A);
-            for (int i = 0; i < 6; ++i) {
-                byte b = (byte) (password % 10);
-                BUFFER.put(b);
-                password = password / 10;
-            }
+            BUFFER.put(encode(password));
             BUFFER.put((byte) 0x0B);
+
             BUFFER.flip();
-            byte[] b = new byte[BUFFER.remaining()];
-            BUFFER.get(b);
-            return b;
+            byte[] bs = new byte[BUFFER.remaining()];
+            BUFFER.get(bs);
+            return bs;
         }
     }
 
-    public static void openDoor(final BtLeDevice device, final int password) {
-        if (device.getState() != BtLeDevice.State.READY) {
-            Log.w(TAG, "device is not ready yet");
-            return;
+    public static byte[] verify(String adminPassword) {
+        Log.i(TAG, "verify: [" + adminPassword + "]");
+        if (adminPassword == null || adminPassword.length() != 6) {
+            Log.e(TAG, "bad password");
+            return null;
         }
 
-        BluetoothGattCharacteristic characteristic1 = device.getCharacteristic(0xfff1);
-        BluetoothGattCharacteristic characteristic4 = device.getCharacteristic(0xfff4);
-        device.makeNotify(characteristic4, new BtLeDevice.ResultListener<Boolean>() {
-            @Override
-            public void onResult(Boolean result) {
-                Log.e(TAG, "make notify: " + result);
-            }
-        });
-        byte[] msg = DoorProtocol.openDoor(password);
-        if (msg == null) {
-            // showMsg("invalid password?");
-            return;
+        synchronized (BUFFER) {
+            BUFFER.clear();
+
+            BUFFER.put((byte) 0x0C);
+            BUFFER.put(encode(adminPassword));
+            BUFFER.put((byte) 0x0D);
+
+            BUFFER.flip();
+            byte[] bs = new byte[BUFFER.remaining()];
+            BUFFER.get(bs);
+            return bs;
         }
-        device.writeCharacteristic(characteristic1, msg, new BtLeDevice.ResultListener<Boolean>() {
-            @Override
-            public void onResult(Boolean result) {
-                Log.e(TAG, "write result: " + result);
-            }
-        });
+    }
+
+    public static byte[] modify(String newPassword) {
+        Log.i(TAG, "modify: [" + newPassword + "]");
+        if (newPassword == null || newPassword.length() != 6) {
+            Log.e(TAG, "bad password");
+            return null;
+        }
+
+        synchronized (BUFFER) {
+            BUFFER.clear();
+
+            BUFFER.put((byte) 0x0E);
+            BUFFER.put(encode(newPassword));
+            BUFFER.put((byte) 0x0F);
+
+            BUFFER.flip();
+            byte[] bs = new byte[BUFFER.remaining()];
+            BUFFER.get(bs);
+            return bs;
+        }
+    }
+
+    public static byte[] passPhone(String phone) {
+        Log.i(TAG, "passPhone: [" + phone + "]");
+        if (phone == null || phone.length() != 11) {
+            Log.e(TAG, "bad phone number");
+            return null;
+        }
+
+        synchronized (BUFFER) {
+            BUFFER.clear();
+
+            BUFFER.put((byte) 0xA0);
+            BUFFER.put(encode(phone));
+            BUFFER.put((byte) 0xB0);
+
+            BUFFER.flip();
+            byte[] bs = new byte[BUFFER.remaining()];
+            BUFFER.get(bs);
+            return bs;
+        }
     }
 
     /**

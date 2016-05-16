@@ -1,7 +1,6 @@
 package com.example.zero.androidskeleton.ui;
 
 import android.Manifest;
-import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -10,24 +9,19 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.*;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.*;
-import android.widget.Toolbar;
-
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.ToggleButton;
 import com.example.zero.androidskeleton.R;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
+import com.example.zero.androidskeleton.log.Log;
 import com.example.zero.androidskeleton.utils.Utils;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class SelectDeviceActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -173,18 +167,6 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
 
     private ToggleButton mAutoButton;
     private void setupUiComp() {
-        mAutoButton = (ToggleButton) findViewById(R.id.auto_button);
-        assert mAutoButton != null;
-        mAutoButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    stopScan();
-                    startScan();
-                }
-            }
-        });
-
         ListView device_list_view = (ListView) findViewById(R.id.device_list_view);
         assert device_list_view != null;
         device_list_view.setAdapter(mListViewAdapter);
@@ -201,6 +183,7 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
                 bundle.putString("addr", device.getAddress());
 
                 Intent intent = new Intent(SelectDeviceActivity.this, ShowDeviceActivity.class);
+                // Intent intent = new Intent(SelectDeviceActivity.this, ModifyPasswordActivity.class);
                 intent.putExtras(bundle);
 
                 startActivity(intent);

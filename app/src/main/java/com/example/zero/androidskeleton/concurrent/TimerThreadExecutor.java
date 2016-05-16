@@ -8,18 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by zero on 5/10/16.
  */
-public class TimerThreadExecutor {
-
-    public interface ResultListener<T> {
-
-        int OK = 0;
-
-        int ERR = -1;
-
-        int TIMEOUT = -2;
-
-        void onResult(int code, T result);
-    }
+public class TimerThreadExecutor extends ThreadExecutor {
 
     private class Notifier<T> implements ResultListener<T> {
 
@@ -27,7 +16,7 @@ public class TimerThreadExecutor {
 
         private final AtomicBoolean mNotified = new AtomicBoolean(false);
 
-        public Notifier(ResultListener<T> l) {
+        Notifier(ResultListener<T> l) {
             mListener = l;
         }
 
@@ -41,10 +30,6 @@ public class TimerThreadExecutor {
         }
     }
 
-    private final BlockingQueue<Runnable> mWorkQueue = new LinkedBlockingQueue<>(4);
-
-    private final ThreadPoolExecutor mExecutor;
-
     private final Timer mTimer;
 
     /**
@@ -54,8 +39,7 @@ public class TimerThreadExecutor {
      * @param timer            timer
      */
     public TimerThreadExecutor(int poolSize, long keepAliveTime, Timer timer) {
-        mExecutor = new ThreadPoolExecutor(
-            poolSize, poolSize, keepAliveTime, TimeUnit.MILLISECONDS, mWorkQueue);
+        super(poolSize, keepAliveTime);
         mTimer = timer;
     }
 
@@ -67,7 +51,7 @@ public class TimerThreadExecutor {
 
         final Notifier<T> notifier = new Notifier<>(listener);
 
-        final Future<T> future = mExecutor.submit(new Callable<T>() {
+        final Future<T> future = submit(new Callable<T>() {
             @Override
             public T call() throws Exception {
                 int code = ResultListener.OK;
@@ -97,9 +81,5 @@ public class TimerThreadExecutor {
         }
 
         return future;
-    }
-
-    public void submit(Runnable task) {
-        mExecutor.submit(task);
     }
 }

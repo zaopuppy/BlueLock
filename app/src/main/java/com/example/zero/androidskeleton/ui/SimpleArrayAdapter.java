@@ -1,6 +1,5 @@
 package com.example.zero.androidskeleton.ui;
 
-import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,8 +8,6 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import com.example.zero.androidskeleton.R;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
-
-import java.util.ArrayList;
 
 /**
  * Created by zero on 2016/4/4.
