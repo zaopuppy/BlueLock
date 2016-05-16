@@ -2,7 +2,9 @@ package com.example.zero.androidskeleton.component;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +20,8 @@ import com.example.zero.androidskeleton.utils.Utils;
 public class PasswordEdit extends LinearLayout {
 
     private final String mHint;
+
+    private EditText mEditText;
 
     public PasswordEdit(Context context) {
         this(context, null);
@@ -46,15 +50,15 @@ public class PasswordEdit extends LinearLayout {
     protected void onFinishInflate() {
         super.onFinishInflate();
 
-        final EditText passwordEdit = (EditText) findViewById(R.id.password_edit_);
-        assert passwordEdit != null;
+        mEditText = (EditText) findViewById(R.id.password_edit_);
+        assert mEditText != null;
         if (mHint != null) {
-            passwordEdit.setHint(mHint);
+            mEditText.setHint(mHint);
         }
 
         final ImageView password_visible_img = (ImageView) findViewById(R.id.password_visible_img_);
         assert password_visible_img != null;
-        if (Utils.isFlagSet(passwordEdit.getInputType(), InputType.TYPE_NUMBER_VARIATION_PASSWORD)) {
+        if (Utils.isFlagSet(mEditText.getInputType(), InputType.TYPE_NUMBER_VARIATION_PASSWORD)) {
             password_visible_img.setImageResource(R.drawable.icon_password_gray_eye);
         } else {
             password_visible_img.setImageResource(R.drawable.icon_password_green_eye);
@@ -62,16 +66,24 @@ public class PasswordEdit extends LinearLayout {
         password_visible_img.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                int type = passwordEdit.getInputType();
+                int type = mEditText.getInputType();
                 if (Utils.isFlagSet(type, InputType.TYPE_NUMBER_VARIATION_PASSWORD)) {
-                    passwordEdit.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                    mEditText.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
                     password_visible_img.setImageResource(R.drawable.icon_password_green_eye);
                 } else {
-                    passwordEdit.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+                    mEditText.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_VARIATION_PASSWORD);
                     password_visible_img.setImageResource(R.drawable.icon_password_gray_eye);
                 }
-                passwordEdit.setSelection(passwordEdit.getText().length());
+                mEditText.setSelection(mEditText.getText().length());
             }
         });
+    }
+
+    public Editable getText() {
+        return mEditText.getText();
+    }
+
+    public void addTextChangedListener(TextWatcher textWatcher) {
+        mEditText.addTextChangedListener(textWatcher);
     }
 }

@@ -23,6 +23,7 @@ import com.example.zero.androidskeleton.R;
 import com.example.zero.androidskeleton.bt.BlueLockProtocol;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
+import com.example.zero.androidskeleton.component.PasswordEdit;
 import com.example.zero.androidskeleton.log.Log;
 import com.example.zero.androidskeleton.state.Context;
 import com.example.zero.androidskeleton.state.State;
@@ -40,7 +41,7 @@ public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.Devic
     private SensorManager mSensorManager = null;
     private Vibrator mVibrator = null;
 
-    private EditText mPasswordEdit;
+    private PasswordEdit mPasswordEdit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +77,7 @@ public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.Devic
     }
 
     private void setupUiComp() {
-        mPasswordEdit = (EditText) findViewById(R.id.password_edit);
+        mPasswordEdit = (PasswordEdit) findViewById(R.id.password_edit);
         assert mPasswordEdit != null;
 
         ImageView unlockImg = (ImageView) findViewById(R.id.icon_mode_img);

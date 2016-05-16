@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.telephony.PhoneNumberUtils;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
 
@@ -62,6 +63,11 @@ public class Utils {
      */
     public static String getPhoneNum(Context context) {
         TelephonyManager manager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        return manager.getLine1Number();
+        String phone = manager.getLine1Number();
+        // FIXME: hard coded...
+        if (!phone.startsWith("+86")) {
+            return phone;
+        }
+        return phone.substring(3);
     }
 }

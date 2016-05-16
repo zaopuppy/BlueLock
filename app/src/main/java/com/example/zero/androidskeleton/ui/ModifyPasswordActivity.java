@@ -11,6 +11,7 @@ import com.example.zero.androidskeleton.R;
 import com.example.zero.androidskeleton.bt.BlueLockProtocol;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
+import com.example.zero.androidskeleton.component.PasswordEdit;
 import com.example.zero.androidskeleton.log.Log;
 import com.example.zero.androidskeleton.state.Context;
 import com.example.zero.androidskeleton.state.State;
@@ -59,13 +60,13 @@ public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.D
     }
 
     private void setupUiComp() {
-        final EditText adminPasswordEdit = (EditText) findViewById(R.id.admin_password_edit);
+        final PasswordEdit adminPasswordEdit = (PasswordEdit) findViewById(R.id.admin_password_edit);
         assert adminPasswordEdit != null;
 
-        final EditText passwordEdit = (EditText) findViewById(R.id.password_edit);
+        final PasswordEdit passwordEdit = (PasswordEdit) findViewById(R.id.password_edit);
         assert passwordEdit != null;
 
-        final EditText newPasswordEdit = (EditText) findViewById(R.id.new_password_edit);
+        final PasswordEdit newPasswordEdit = (PasswordEdit) findViewById(R.id.new_password_edit);
         assert newPasswordEdit != null;
 
         Button cancelButton = (Button) findViewById(R.id.cancel_button);

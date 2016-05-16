@@ -27,16 +27,13 @@ public class SplashActivity extends BaseActivity {
 
         setContentView(R.layout.activity_splash);
 
-        // FOR DEBUGGING ONLY
-        GlobalObjects.unlockMode = GlobalObjects.UNLOCK_MODE_SHAKE;
-
         GlobalObjects.timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Intent intent = new Intent(SplashActivity.this, BroadcastDeviceActivity.class);
+                        Intent intent = new Intent(SplashActivity.this, SelectDeviceActivity.class);
                         startActivity(intent);
                         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                         finish();
