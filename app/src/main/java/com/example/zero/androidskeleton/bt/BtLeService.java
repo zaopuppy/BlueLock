@@ -6,6 +6,7 @@ import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.util.Log;
+import com.example.zero.androidskeleton.GlobalObjects;
 import com.example.zero.androidskeleton.concurrent.TimerThreadExecutor;
 import com.example.zero.androidskeleton.utils.SequenceGenerator;
 
@@ -14,8 +15,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ThreadPoolExecutor;
 
 
 /**
@@ -35,9 +34,9 @@ public class BtLeService {
 
     public static final BtLeService INSTANCE = new BtLeService();
 
-    private final Timer mTimer = new Timer("btle-service-timer");
+    private final Timer mTimer;
 
-    private final TimerThreadExecutor mExecutor = new TimerThreadExecutor(2, 10*1000, mTimer);
+    private final TimerThreadExecutor mExecutor;
 
     private final ConcurrentHashMap<String, BtLeDevice> mDeviceMap = new ConcurrentHashMap<>(4);
 
@@ -71,6 +70,11 @@ public class BtLeService {
             }
         }
     };
+
+    public BtLeService() {
+        mTimer = GlobalObjects.timer;
+        mExecutor = new TimerThreadExecutor(2, 10*1000, mTimer);
+    }
 
     private ScanListener[] getScanListenerCopy() {
         synchronized (mScanListenerList) {

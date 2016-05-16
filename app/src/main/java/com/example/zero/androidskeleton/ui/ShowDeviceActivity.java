@@ -1,51 +1,46 @@
 package com.example.zero.androidskeleton.ui;
 
-import android.bluetooth.BluetoothDevice;
+import android.app.Service;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
+import android.widget.ImageView;
+import com.example.zero.androidskeleton.GlobalObjects;
 import com.example.zero.androidskeleton.R;
+import com.example.zero.androidskeleton.bt.BlueLockProtocol;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
-import com.example.zero.androidskeleton.bt.BtLeUtil;
-import com.example.zero.androidskeleton.bt.DoorProtocol;
-import com.example.zero.androidskeleton.storage.BtDeviceStorage;
+import com.example.zero.androidskeleton.log.Log;
+import com.example.zero.androidskeleton.state.Context;
+import com.example.zero.androidskeleton.state.State;
+import com.example.zero.androidskeleton.state.StateMachine;
 import com.example.zero.androidskeleton.utils.Utils;
 
 /**
  *
- * * check if system support bluetooth-le
- * * auto in range unlock
- * * report mobile phone number
  */
-public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.DeviceListener {
+public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.DeviceListener, SensorEventListener {
     private static final String TAG = "ShowDeviceActivity";
-
-    private TextView mDetailText;
-    private Button openButton;
-
-    private void log(String msg) {
-        Log.i(TAG, msg + '\n');
-    }
 
     private BtLeDevice mDevice = null;
 
-    private void showMsg(String msg) {
-        mDetailText.append(msg + '\n');
-    }
+    private SensorManager mSensorManager = null;
+    private Vibrator mVibrator = null;
+
+    private EditText mPasswordEdit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,14 +69,81 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        setUiComp();
+        setupUiComp();
 
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        mVibrator = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
     }
 
-    @Override
-    protected void onResume() {
-        mDevice.addDeviceListener(this);
-        super.onResume();
+    private void setupUiComp() {
+        mPasswordEdit = (EditText) findViewById(R.id.password_edit);
+        assert mPasswordEdit != null;
+
+        ImageView unlockImg = (ImageView) findViewById(R.id.icon_mode_img);
+        assert unlockImg != null;
+
+        // 根据不同的模式决定界面如何显示
+        switch (GlobalObjects.unlockMode) {
+            case GlobalObjects.UNLOCK_MODE_MANUNAL: {
+                unlockImg.setImageResource(R.drawable.icon_green_manual);
+                unlockImg.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String password = mPasswordEdit.getText().toString();
+                        if (password.length() != 6) {
+                            Utils.makeToast(getApplicationContext(), "password incorrect");
+                            return;
+                        }
+                        unlock(password);
+                    }
+                });
+                break;
+            }
+            case GlobalObjects.UNLOCK_MODE_AUTO: {
+                unlockImg.setImageResource(R.drawable.icon_green_auto);
+                mPasswordEdit.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        String password = mPasswordEdit.getText().toString();
+                        if (password.length() != 6) {
+                            return;
+                        }
+
+                        // cancel previous task
+                        // unlockSM.handle(EVENT_CANCEL, -1, null);
+
+                        // try this one
+                        unlockSM.handle(EVENT_UNLOCK, -1, password);
+                    }
+                });
+                break;
+            }
+            case GlobalObjects.UNLOCK_MODE_SHAKE: {
+                unlockImg.setImageResource(R.drawable.icon_green_rock);
+                unlockImg.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String password = mPasswordEdit.getText().toString();
+                        if (password.length() != 6) {
+                            Utils.makeToast(getApplicationContext(), "password incorrect");
+                            return;
+                        }
+                        unlock(password);
+                    }
+                });
+                break;
+            }
+            default:
+                break;
+        }
     }
 
     @Override
@@ -148,188 +210,217 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
     }
 
     @Override
+    protected void onResume() {
+        if (mDevice != null) {
+            mDevice.addDeviceListener(this);
+        }
+        mSensorManager.unregisterListener(this);
+        super.onResume();
+    }
+
+    @Override
     protected void onPause() {
-        mDevice.removeDeviceListener(this);
-        mDevice.disconnectGatt();
+        if (mDevice != null) {
+            mDevice.removeDeviceListener(this);
+            mDevice.disconnectGatt();
+        }
+        mSensorManager.registerListener(
+            this,
+            mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+            SensorManager.SENSOR_DELAY_NORMAL);
         super.onPause();
     }
 
-    private void setUiComp() {
-        //mDetailText = (TextView) findViewById(R.id.device_detail);
-        //assert mDetailText != null;
-        //
-        //openButton = (Button) findViewById(R.id.open_button);
-        //assert openButton != null;
-        //openButton.setEnabled(false);
-        //openButton.setOnClickListener(new View.OnClickListener() {
-        //    @Override
-        //    public void onClick(View v) {
-        //        int password = BtDeviceStorage.INSTANCE.get(mDevice.getAddress());
-        //        if (password >= 0) {
-        //            mPassword = password;
-        //            open(password);
-        //            return;
-        //        }
-        //        AlertDialog dialog = createPasswordDialog();
-        //        dialog.show();
-        //    }
-        //});
-        //
-        //Button changeButton = (Button) findViewById(R.id.change_button);
-        //assert changeButton != null;
-        //changeButton.setEnabled(false);
-        //changeButton.setOnClickListener(new View.OnClickListener() {
-        //    @Override
-        //    public void onClick(View v) {
-        //        //future = mDevice.writeCharacteristic(0xfff1, new byte[0]);
-        //        //future.
-        //    }
-        //});
-
+    private void unlock(String password) {
+        // FIXME: delete this line
+        Log.d(TAG, "unlock: " + password);
+        unlockSM.handle(EVENT_UNLOCK, -1, password);
     }
 
-    private static abstract class State {
+    private static final int EVENT_DEV_STATE_CHANGED = 1;
+    private static final int EVENT_UNLOCK = 2;
 
-        abstract void handle(StateMachine machine, int event, Object o);
+    private final State IDLE = new IdleState();
+    private final State WAIT_FOR_DISCONNECT = new WaitForDisconnectState();
+    private final State WAIT_FOR_CONNECT = new WaitForConnectState();
+    private final State READY = new ReadyState();
 
-        private void setState(StateMachine machine, State newState) {
-            machine.setState(newState);
-        }
-    }
-
-    private static class StateMachine {
-
-        private State state;
-
-        public StateMachine(State initState) {
-            this.state = initState;
-        }
-
-        public synchronized void handle(int event, Object o) {
-            state.handle(this, event, o);
-        }
-
-        void setState(State newState) {
-            this.state = newState;
-        }
-    }
-
-    // CONNECT --> OPEN --> TRANSFER-NUM -> DONE
-    private State WAIT_FOR_CONNECTION = new State() {
+    private class IdleState implements State {
         @Override
-        void handle(StateMachine machine, int event, Object o) {
+        public void handle(Context context, int event, int arg, Object o) {
             switch (event) {
+                case EVENT_UNLOCK:
+                    handleUnlock(context, arg, o);
+                default:
+                    // ignore
+                    break;
+            }
+        }
+
+        private void handleUnlock(Context context, int arg, Object o) {
+            if (!(o instanceof String)) {
+                Log.e(TAG, "bad argument, string password expected");
+                return;
+            }
+
+            String password = (String) o;
+
+            // save password first
+            context.putString("password", password);
+
+            // then connect
+            connect(context, arg, o);
+        }
+
+        private void connect(Context context, int arg, Object o) {
+            BtLeDevice.State state = mDevice.getState();
+            Log.d(TAG, "connect: current-state=" + state);
+
+            switch (state) {
+                case READY:
+                    context.setState(READY);
+                    context.handle(EVENT_UNLOCK, arg, o);
+                    break;
+                case DISCONNECTED:
+                    mDevice.connectGatt(ShowDeviceActivity.this);
+                    context.setState(WAIT_FOR_CONNECT);
+                    break;
+                default:
+                    mDevice.disconnectGatt();
+                    context.setState(WAIT_FOR_DISCONNECT);
+                    break;
+            }
+        }
+    }
+
+    private class WaitForDisconnectState implements State {
+        @Override
+        public void handle(Context context, int event, int arg, Object o) {
+            switch (event) {
+                case EVENT_DEV_STATE_CHANGED:
+                    BtLeDevice.State state = (BtLeDevice.State) o;
+                    if (state == BtLeDevice.State.DISCONNECTED) {
+                        mDevice.connectGatt(ShowDeviceActivity.this);
+                        context.setState(WAIT_FOR_CONNECT);
+                    } else {
+                        Log.w(TAG, "expect disconnect event, received: " + state);
+                    }
+                    break;
+                default:
+                    // ignore
+                    break;
+            }
+        }
+    }
+
+    private class WaitForConnectState implements State {
+        @Override
+        public void handle(Context context, int event, int arg, Object o) {
+            switch (event) {
+                case EVENT_DEV_STATE_CHANGED:
+                    BtLeDevice.State state = (BtLeDevice.State) o;
+                    handleStateChanged(context, state);
+                    break;
+                default:
+                    // ignore
+                    break;
+            }
+        }
+
+        private void handleStateChanged(Context context, BtLeDevice.State state) {
+            switch (state) {
+                case READY:
+                    context.setState(READY);
+                    String password = context.getString("password", null);
+                    Log.d(TAG, "context password: " + password);
+                    if (password != null) {
+                        context.handle(EVENT_UNLOCK, -1, password);
+                    }
+                    break;
                 default:
                     break;
             }
         }
-    };
+    }
 
-    private int mPassword = 0;
-    private AlertDialog createPasswordDialog() {
-        // create password view
-        View passView = getLayoutInflater().inflate(R.layout.input_password, null);
-        final EditText passText = (EditText) passView.findViewById(R.id.password_edit);
-        assert passText != null;
-
-        // create dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        return builder
-            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    try {
-                        mPassword = Integer.parseInt(passText.getText().toString());
-                        open(mPassword);
-                    } catch (NumberFormatException e) {
-                        showMsg("invalid password");
+    private class ReadyState implements State {
+        @Override
+        public void handle(Context context, int event, int arg, Object o) {
+            switch (event) {
+                case EVENT_DEV_STATE_CHANGED:
+                    // BtLeDevice.State state = (BtLeDevice.State) o;
+                    // handleStateChanged(context, state);
+                    context.setState(IDLE);
+                    break;
+                case EVENT_UNLOCK:
+                    //String password = context.getString("password", null);
+                    //if (password == null) {
+                    //    log("no password , don't unlock");
+                    //    return;
+                    //}
+                    String password = (String) o;
+                    BluetoothGattCharacteristic char1 = mDevice.getCharacteristic(0xfff1);
+                    if (char1 == null) {
+                        Log.e(TAG, "failed to get characteristic 0xfff1");
+                        return;
                     }
-                }
-            })
-            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Utils.makeToast(ShowDeviceActivity.this, "Cancel");
-                }
-            })
-            .setView(passView)
-            .create();
+                    mDevice.writeCharacteristic(char1, BlueLockProtocol.unlock(password), new BtLeDevice.ResultListener<Boolean>() {
+                        @Override
+                        public void onResult(Boolean result) {
+                            Log.d(TAG, "wrote password: " + result);
+                        }
+                    });
+                    String phoneNum = Utils.getPhoneNum(getApplicationContext());
+                    if (phoneNum == null || phoneNum.length() != 11) {
+                        Utils.makeToast(getApplicationContext(), "invalid phone number read: " + phoneNum);
+                        return;
+                    }
+                    mDevice.writeCharacteristic(char1, BlueLockProtocol.passPhone(phoneNum), new BtLeDevice.ResultListener<Boolean>() {
+                        @Override
+                        public void onResult(Boolean result) {
+                            Log.d(TAG, "wrote phone num: " + result);
+                        }
+                    });
+
+                    break;
+                default:
+                    // ignore
+                    break;
+            }
+        }
     }
 
-    private void open(final int password) {
-        if (mDevice.getState() != BtLeDevice.State.READY) {
-            Utils.makeToast(ShowDeviceActivity.this, "device is not yet ready");
-            return;
+    /**
+     * CONNECT --> OPEN --> TRANSFER-NUM -> DONE
+     */
+    private class UnlockSM extends StateMachine {
+        UnlockSM() {
+            init(IDLE);
         }
-
-        BluetoothGattCharacteristic characteristic1 = null;
-        BluetoothGattCharacteristic characteristic2 = null;
-        BluetoothGattCharacteristic characteristic3 = null;
-        BluetoothGattCharacteristic characteristic4 = null;
-
-        for (BluetoothGattService service : mDevice.getServiceList()) {
-            Log.i(TAG, "service: " + BtLeUtil.uuidStr(service.getUuid()));
-
-            for (final BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
-                final int uuid16 = BtLeUtil.extractBtUuid(characteristic.getUuid());
-                if (BtLeUtil.isReservedUuid(uuid16)) {
-                    continue;
-                }
-
-                switch (uuid16) {
-                    case 0xfff1:
-                        characteristic1 = characteristic;
-                        break;
-                    case 0xfff2:
-                        characteristic2 = characteristic;
-                        break;
-                    case 0xfff3:
-                        characteristic3 = characteristic;
-                        break;
-                    case 0xfff4:
-                        characteristic4 = characteristic;
-                        break;
-                    default:
-                        // ignore
-                        break;
-                }
-            }
-        }
-
-        mDevice.makeNotify(characteristic4, new BtLeDevice.ResultListener<Boolean>() {
-            @Override
-            public void onResult(Boolean result) {
-                Log.e(TAG, "make notify: " + result);
-            }
-        });
-
-        byte[] msg = DoorProtocol.openDoor(password);
-        if (msg == null) {
-            showMsg("invalid password?");
-            return;
-        }
-        mDevice.writeCharacteristic(characteristic1, msg, new BtLeDevice.ResultListener<Boolean>() {
-            @Override
-            public void onResult(Boolean result) {
-                Log.e(TAG, "write result: " + result);
-            }
-        });
     }
 
+    private final UnlockSM unlockSM = new UnlockSM();
+
+    private class AutoUnlockTask extends Thread {
+        private boolean isStop;
+        @Override
+        public void run() {
+            // TODO
+        }
+    }
+
+    private final Thread autoUnlockTask = new Thread(new AutoUnlockTask());
 
     @Override
     public void onDeviceStateChanged(final BtLeDevice.State state) {
         Log.e(TAG, "new state: " + state);
 
+        unlockSM.handle(EVENT_DEV_STATE_CHANGED, -1, state);
+
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 invalidateOptionsMenu();
-                if (state == BtLeDevice.State.READY) {
-                    openButton.setEnabled(true);
-                } else {
-                    openButton.setEnabled(false);
-                }
             }
         });
     }
@@ -343,36 +434,40 @@ public class ShowDeviceActivity extends AppCompatActivity implements BtLeDevice.
         }
 
         final byte result = characteristic.getValue()[0];
-        final String resultStr;
-        switch (result) {
-            case DoorProtocol.RESULT_PASSWORD_CORRECT: {
-                resultStr = "开门密码正确";
-                Log.d(TAG, "save password: " + mPassword);
-                BtDeviceStorage.INSTANCE.put(mDevice.getAddress(), mPassword);
-                break;
-            }
-            case DoorProtocol.RESULT_PASSWORD_WRONG: {
-                resultStr = "开门密码错误";
-                Log.d(TAG, "bad password clear: " + mPassword);
-                BtDeviceStorage.INSTANCE.put(mDevice.getAddress(), -1);
-                break;
-            }
-            case DoorProtocol.RESULT_PASSWORD_CHANGED: {
-                resultStr = "修改密码成功";
-                Log.d(TAG, "password changed: " + mPassword);
-                BtDeviceStorage.INSTANCE.put(mDevice.getAddress(), mPassword);
-                break;
-            }
-            default: {
-                resultStr = "" + result;
-                break;
-            }
-        }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                showMsg("result: " + resultStr);
+                Utils.makeToast(getApplicationContext(), BlueLockProtocol.getCodeDesc(result));
             }
         });
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (GlobalObjects.unlockMode != GlobalObjects.UNLOCK_MODE_SHAKE) {
+            return;
+        }
+
+        int sensorType = event.sensor.getType();
+        float[] values = event.values;
+        if (sensorType == Sensor.TYPE_ACCELEROMETER) {
+            if ((Math.abs(values[0]) > 17 || Math.abs(values[1]) > 17 || Math.abs(values[2]) > 17)) {
+                Log.d("sensor x ", "============ values[0] = " + values[0]);
+                Log.d("sensor y ", "============ values[1] = " + values[1]);
+                Log.d("sensor z ", "============ values[2] = " + values[2]);
+                mVibrator.vibrate(500);
+
+                String password = mPasswordEdit.getText().toString();
+                if (password.length() == 6) {
+                    unlock(password);
+                } else {
+                    Utils.makeToast(getApplicationContext(), "bad password");
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 }

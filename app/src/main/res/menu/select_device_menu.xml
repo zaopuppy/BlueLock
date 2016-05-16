@@ -8,12 +8,12 @@
         app:showAsAction="ifRoom"/>
 
     <item android:id="@+id/menu_scan"
-        android:title="Scan"
+        android:title="扫描"
         android:orderInCategory="100"
         app:showAsAction="ifRoom|withText"/>
 
     <item android:id="@+id/menu_stop"
-        android:title="Stop"
+        android:title="停止"
         android:orderInCategory="101"
         app:showAsAction="ifRoom|withText"/>
 </menu>

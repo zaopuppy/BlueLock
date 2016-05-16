@@ -1,7 +1,6 @@
 package com.example.zero.androidskeleton.ui;
 
 import android.Manifest;
-import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -24,6 +23,7 @@ import android.widget.Toolbar;
 import com.example.zero.androidskeleton.R;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
+import com.example.zero.androidskeleton.log.Log;
 import com.example.zero.androidskeleton.utils.Utils;
 
 import java.util.Timer;
@@ -173,18 +173,6 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
 
     private ToggleButton mAutoButton;
     private void setupUiComp() {
-        mAutoButton = (ToggleButton) findViewById(R.id.auto_button);
-        assert mAutoButton != null;
-        mAutoButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    stopScan();
-                    startScan();
-                }
-            }
-        });
-
         ListView device_list_view = (ListView) findViewById(R.id.device_list_view);
         assert device_list_view != null;
         device_list_view.setAdapter(mListViewAdapter);
@@ -201,6 +189,7 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
                 bundle.putString("addr", device.getAddress());
 
                 Intent intent = new Intent(SelectDeviceActivity.this, ShowDeviceActivity.class);
+                // Intent intent = new Intent(SelectDeviceActivity.this, ModifyPasswordActivity.class);
                 intent.putExtras(bundle);
 
                 startActivity(intent);
