@@ -1,10 +1,18 @@
 package com.example.zero.androidskeleton.ui;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.*;
 import android.content.Intent;
 import android.os.ParcelUuid;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -20,7 +28,7 @@ import com.example.zero.androidskeleton.bt.BlueLockProtocol;
  * allow see this stackoverflow thread about the same issue
  * Android 4.3 as a Bluetooth LE Peripheral (http://stackoverflow.com/questions/18008507/android-4-3-as-a-bluetooth-le-peripheral)
  */
-public class BroadcastDeviceActivity extends BaseActivity {
+public class BroadcastDeviceActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
