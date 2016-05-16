@@ -46,13 +46,13 @@ public class PasswordEdit extends LinearLayout {
     protected void onFinishInflate() {
         super.onFinishInflate();
 
-        final EditText passwordEdit = (EditText) findViewById(R.id.password_edit);
+        final EditText passwordEdit = (EditText) findViewById(R.id.password_edit_);
         assert passwordEdit != null;
         if (mHint != null) {
             passwordEdit.setHint(mHint);
         }
 
-        final ImageView password_visible_img = (ImageView) findViewById(R.id.password_visible_img);
+        final ImageView password_visible_img = (ImageView) findViewById(R.id.password_visible_img_);
         assert password_visible_img != null;
         if (Utils.isFlagSet(passwordEdit.getInputType(), InputType.TYPE_NUMBER_VARIATION_PASSWORD)) {
             password_visible_img.setImageResource(R.drawable.icon_password_gray_eye);
