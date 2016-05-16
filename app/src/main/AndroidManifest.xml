@@ -21,24 +21,25 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity
             android:name=".ui.SelectDeviceActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".MainActivity" />
-        <activity android:name=".ui.ShowDeviceActivity" />
+        <activity
+            android:name=".ui.ShowDeviceActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".ui.BroadcastDeviceActivity"
             android:theme="@style/AppTheme.NoActionBar" />
-
-        <activity android:name=".ui.SplashActivity" >
+        <activity android:name=".ui.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.ModifyPasswordActivity"></activity>
+        <activity android:name=".ui.ModifyPasswordActivity" />
+        <activity android:name=".ui.ModeSettingActivity"></activity>
     </application>
 
 </manifest>
