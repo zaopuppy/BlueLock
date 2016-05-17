@@ -50,6 +50,7 @@ public class PasswordEdit extends LinearLayout {
     protected void onFinishInflate() {
         super.onFinishInflate();
 
+        // FIXME: current implement requires id name is unique, which is unreasonable.
         mEditText = (EditText) findViewById(R.id.password_edit_);
         assert mEditText != null;
         if (mHint != null) {
