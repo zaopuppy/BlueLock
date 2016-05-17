@@ -10,13 +10,16 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageView;
 import com.example.zero.androidskeleton.GlobalObjects;
 import com.example.zero.androidskeleton.R;
@@ -33,7 +36,7 @@ import com.example.zero.androidskeleton.utils.Utils;
 /**
  *
  */
-public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.DeviceListener, SensorEventListener {
+public class ShowDeviceActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener, BtLeDevice.DeviceListener, SensorEventListener {
     private static final String TAG = "ShowDeviceActivity";
 
     private BtLeDevice mDevice = null;
@@ -47,7 +50,20 @@ public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.Devic
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_show_device);
+        setContentView(R.layout.activity_show_device_main);;
+
+        android.support.v7.widget.Toolbar toolbar = (android.support.v7.widget.Toolbar) findViewById(R.id.activity_show_device_toolbar);
+        setSupportActionBar(toolbar);
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout_show);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view_show);
+        navigationView.setNavigationItemSelectedListener(this);
+
+
 
         Intent intent = getIntent();
         if (intent == null || intent.getExtras() == null) {
@@ -470,5 +486,25 @@ public class ShowDeviceActivity extends BaseActivity implements BtLeDevice.Devic
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_camera) {
+            // Handle the camera action
+        } else if (id == R.id.nav_gallery) {
+
+        } else if (id == R.id.nav_slideshow) {
+
+        } else if (id == R.id.nav_send) {
+
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
     }
 }

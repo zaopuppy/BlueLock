@@ -76,7 +76,7 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
 
         mListViewAdapter = new SimpleArrayAdapter(this, R.layout.select_list_item_device);
 
-        setContentView(R.layout.activity_select);
+        setContentView(R.layout.activity_select_device_main);
 
         android.support.v7.widget.Toolbar toolbar = (android.support.v7.widget.Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);

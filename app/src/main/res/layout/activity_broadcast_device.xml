@@ -10,7 +10,7 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.example.zero.androidskeleton.ui.BroadcastDeviceActivity"
-    tools:showIn="@layout/app_bar_main" >
+    tools:showIn="@layout/activity_select_device_bar" >
 
     <com.example.zero.androidskeleton.component.PasswordEdit
         android:layout_width="wrap_content"
