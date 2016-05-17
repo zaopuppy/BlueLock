@@ -45,6 +45,7 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
     private Vibrator mVibrator = null;
 
     private PasswordEdit mPasswordEdit;
+    private ImageView mUnlockImg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,71 +97,8 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
         mPasswordEdit = (PasswordEdit) findViewById(R.id.password_edit);
         assert mPasswordEdit != null;
 
-        ImageView unlockImg = (ImageView) findViewById(R.id.icon_mode_img);
-        assert unlockImg != null;
-
-        // 根据不同的模式决定界面如何显示
-        switch (GlobalObjects.unlockMode) {
-            case GlobalObjects.UNLOCK_MODE_MANUNAL: {
-                unlockImg.setImageResource(R.drawable.icon_green_manual);
-                unlockImg.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        String password = mPasswordEdit.getText().toString();
-                        if (password.length() != 6) {
-                            Utils.makeToast(getApplicationContext(), "password incorrect");
-                            return;
-                        }
-                        unlock(password);
-                    }
-                });
-                break;
-            }
-            case GlobalObjects.UNLOCK_MODE_AUTO: {
-                unlockImg.setImageResource(R.drawable.icon_green_auto);
-                mPasswordEdit.addTextChangedListener(new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                    }
-
-                    @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    }
-
-                    @Override
-                    public void afterTextChanged(Editable s) {
-                        String password = mPasswordEdit.getText().toString();
-                        if (password.length() != 6) {
-                            return;
-                        }
-
-                        // cancel previous task
-                        // unlockSM.handle(EVENT_CANCEL, -1, null);
-
-                        // try this one
-                        unlockSM.handle(EVENT_UNLOCK, -1, password);
-                    }
-                });
-                break;
-            }
-            case GlobalObjects.UNLOCK_MODE_SHAKE: {
-                unlockImg.setImageResource(R.drawable.icon_green_rock);
-                unlockImg.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        String password = mPasswordEdit.getText().toString();
-                        if (password.length() != 6) {
-                            Utils.makeToast(getApplicationContext(), "password incorrect");
-                            return;
-                        }
-                        unlock(password);
-                    }
-                });
-                break;
-            }
-            default:
-                break;
-        }
+        mUnlockImg = (ImageView) findViewById(R.id.icon_mode_img);
+        assert mUnlockImg != null;
     }
 
     @Override
@@ -228,11 +166,75 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
 
     @Override
     protected void onResume() {
+        super.onResume();
+
         if (mDevice != null) {
             mDevice.addDeviceListener(this);
         }
         mSensorManager.unregisterListener(this);
-        super.onResume();
+
+        // 根据不同的模式决定界面如何显示
+        switch (GlobalObjects.unlockMode) {
+            case GlobalObjects.UNLOCK_MODE_MANUNAL: {
+                mUnlockImg.setImageResource(R.drawable.icon_green_manual);
+                mUnlockImg.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String password = mPasswordEdit.getText().toString();
+                        if (password.length() != 6) {
+                            Utils.makeToast(getApplicationContext(), "password incorrect");
+                            return;
+                        }
+                        unlock(password);
+                    }
+                });
+                break;
+            }
+            case GlobalObjects.UNLOCK_MODE_AUTO: {
+                mUnlockImg.setImageResource(R.drawable.icon_green_auto);
+                mPasswordEdit.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        String password = mPasswordEdit.getText().toString();
+                        if (password.length() != 6) {
+                            return;
+                        }
+
+                        // cancel previous task
+                        // unlockSM.handle(EVENT_CANCEL, -1, null);
+
+                        // try this one
+                        unlockSM.handle(EVENT_UNLOCK, -1, password);
+                    }
+                });
+                break;
+            }
+            case GlobalObjects.UNLOCK_MODE_SHAKE: {
+                mUnlockImg.setImageResource(R.drawable.icon_green_rock);
+                mUnlockImg.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String password = mPasswordEdit.getText().toString();
+                        if (password.length() != 6) {
+                            Utils.makeToast(getApplicationContext(), "password incorrect");
+                            return;
+                        }
+                        unlock(password);
+                    }
+                });
+                break;
+            }
+            default:
+                break;
+        }
     }
 
     @Override
@@ -493,17 +495,22 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_send) {
-
+        switch (id) {
+            case R.id.nav_show_password: {
+                Intent intent = new Intent(this, ModifyPasswordActivity.class);
+                startActivity(intent);
+                break;
+            }
+            case R.id.nav_show_mode: {
+                Intent intent = new Intent(this, ModeSettingActivity.class);
+                startActivity(intent);
+                break;
+            }
+            default:
+                break;
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout_show);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }

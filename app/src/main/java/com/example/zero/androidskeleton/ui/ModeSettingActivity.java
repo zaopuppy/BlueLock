@@ -32,6 +32,12 @@ public class ModeSettingActivity extends AppCompatActivity {
         setupUiComp();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setMode(GlobalObjects.unlockMode);
+    }
+
     private void setupUiComp() {
         {
             manualModeLayout = (LinearLayout) findViewById(R.id.manual_mode_layout);
@@ -78,7 +84,6 @@ public class ModeSettingActivity extends AppCompatActivity {
             assert shakeModeText != null;
         }
 
-        setMode(GlobalObjects.unlockMode);
     }
 
     private void setMode(int mode) {
