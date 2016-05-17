@@ -2,6 +2,7 @@ package com.example.zero.androidskeleton.ui;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -161,10 +162,22 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
         mSortListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //这里要利用adapter.getItem(position)来获取当前position所对应的对象
-                Toast.makeText(getApplication(), ((BtLeDevice) mSortAdapter.getItem(position)).getName(), Toast.LENGTH_SHORT).show();
+                BtLeService.INSTANCE.stopScan();
+
+                // get selected info
+                final BtLeDevice device = mSortAdapter.getItem(position);
+                log("device: " + device.getName() + ", " + device.getAddress());
+
+                Bundle bundle = new Bundle();
+                bundle.putString("addr", device.getAddress());
+
+                Intent intent = new Intent(SelectDeviceActivity.this, ShowDeviceActivity.class);
+                // Intent intent = new Intent(SelectDeviceActivity.this, ModifyPasswordActivity.class);
+                intent.putExtras(bundle);
+
+                startActivity(intent);
             }
         });
 
@@ -238,34 +251,7 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
     }
 
     private ToggleButton mAutoButton;
-
-//    // TODO
-//    private void setupUiComp() {
-//        ListView device_list_view = (ListView) findViewById(R.id.device_list_view);
-//        assert device_list_view != null;
-//        device_list_view.setAdapter(mListViewAdapter);
-//        device_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                BtLeService.INSTANCE.stopScan();
-//
-//                // get selected info
-//                final BtLeDevice device = mListViewAdapter.getItem(position);
-//                log("device: " + device.getName() + ", " + device.getAddress());
-//
-//                Bundle bundle = new Bundle();
-//                bundle.putString("addr", device.getAddress());
-//
-//                Intent intent = new Intent(SelectDeviceActivity.this, ShowDeviceActivity.class);
-//                // Intent intent = new Intent(SelectDeviceActivity.this, ModifyPasswordActivity.class);
-//                intent.putExtras(bundle);
-//
-//                startActivity(intent);
-//            }
-//        });
-//    }
-
-
+    
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
