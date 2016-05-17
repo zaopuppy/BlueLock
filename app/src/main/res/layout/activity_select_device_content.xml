@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,14 +8,35 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.example.zero.androidskeleton.ui.SelectDeviceActivity"
     tools:showIn="@layout/activity_select_device_bar">
 
-    <ListView
-        android:id="@+id/device_list_view"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        />
+        android:layout_height="match_parent" >
+        <ListView
+            android:id="@+id/device_list_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
 
-</RelativeLayout>
+        <TextView
+            android:id="@+id/dialog"
+            android:layout_width="80.0dip"
+            android:layout_height="80.0dip"
+            android:layout_gravity="center"
+            android:background="#CCCCCC"
+            android:gravity="center"
+            android:textColor="#ffffffff"
+            android:textSize="30dip"
+            android:visibility="invisible" />
+
+        <com.example.zero.androidskeleton.sort.SideBar
+            android:id="@+id/sidrbar"
+            android:layout_width="30dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="right|center" />
+    </FrameLayout>
+</LinearLayout>

@@ -1,7 +1,7 @@
 package com.example.zero.androidskeleton.ui;
 
 import android.Manifest;
-import android.content.Intent;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -16,18 +16,44 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 import com.example.zero.androidskeleton.R;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
 import com.example.zero.androidskeleton.log.Log;
+import com.example.zero.androidskeleton.sort.CharacterParser;
+import com.example.zero.androidskeleton.sort.PinyinComparator;
+import com.example.zero.androidskeleton.sort.SideBar;
+import com.example.zero.androidskeleton.sort.SideBar.OnTouchingLetterChangedListener;
+import com.example.zero.androidskeleton.sort.SortAdapter;
+import com.example.zero.androidskeleton.sort.SortModel;
 import com.example.zero.androidskeleton.utils.Utils;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class SelectDeviceActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "SelectDeviceActivity";
 
-    private SimpleArrayAdapter mListViewAdapter;
+    private Context mContext;
+    private ListView mSortListView;
+    private SideBar mSortSideBar;
+    private TextView mSortDialog;
+    private SortAdapter mSortAdapter;
+    /**
+     * 汉字转换成拼音的类
+     */
+    private CharacterParser characterParser;
+    private List<BtLeDevice> SourceDateList = new ArrayList<>();
+    /**
+     * 根据拼音来排列ListView里面的数据类
+     */
+    private PinyinComparator pinyinComparator;
+
 
     private void log(final String msg) {
         Log.i(TAG, msg + '\n');
@@ -37,7 +63,9 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
 
         @Override
         public void onDeviceFound(BtLeDevice dev) {
-            mListViewAdapter.add(dev);
+            SourceDateList.add(dev);
+            mSortAdapter = new SortAdapter(mContext, R.layout.select_list_item_device, SourceDateList);
+            mSortListView.setAdapter(mSortAdapter);
         }
 
         @Override
@@ -71,10 +99,9 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mContext = this;
 
         checkAllMyPermission();
-
-        mListViewAdapter = new SimpleArrayAdapter(this, R.layout.select_list_item_device);
 
         setContentView(R.layout.activity_select_device_main);
 
@@ -101,12 +128,57 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
             finish();
         }
 
-        setupUiComp();
+//        setupUiComp();
+
+        initViews();
+    }
+
+    private void initViews() {
+        //实例化汉字转拼音类
+        characterParser = CharacterParser.getInstance();
+
+        pinyinComparator = new PinyinComparator();
+
+        mSortSideBar = (SideBar) findViewById(R.id.sidrbar);
+        mSortDialog = (TextView) findViewById(R.id.dialog);
+        mSortSideBar.setTextView(mSortDialog);
+
+        //设置右侧触摸监听
+        mSortSideBar.setOnTouchingLetterChangedListener(new OnTouchingLetterChangedListener() {
+
+            @Override
+            public void onTouchingLetterChanged(String s) {
+                //该字母首次出现的位置
+                int position = mSortAdapter.getPositionForSection(s.charAt(0));
+                if(position != -1){
+                    mSortListView.setSelection(position);
+                }
+
+            }
+        });
+
+        mSortListView = (ListView) findViewById(R.id.device_list_view);
+        mSortListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                //这里要利用adapter.getItem(position)来获取当前position所对应的对象
+                Toast.makeText(getApplication(), ((BtLeDevice) mSortAdapter.getItem(position)).getName(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+        // 根据a-z进行排序源数据
+        Collections.sort(SourceDateList, pinyinComparator);
+        mSortAdapter = new SortAdapter(mContext, R.layout.select_list_item_device, SourceDateList);
+        mSortListView.setAdapter(mSortAdapter);
 
     }
 
+
     private void startScan() {
-        mListViewAdapter.clear();
+        mSortAdapter.clear();
         BtLeService.INSTANCE.startScan();
         invalidateOptionsMenu();
     }
@@ -119,7 +191,7 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
     @Override
     protected void onResume() {
         super.onResume();
-        mListViewAdapter.clear();
+        mSortAdapter.clear();
         BtLeService.INSTANCE.addScanListener(mScanListener);
     }
 
@@ -166,30 +238,32 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
     }
 
     private ToggleButton mAutoButton;
-    private void setupUiComp() {
-        ListView device_list_view = (ListView) findViewById(R.id.device_list_view);
-        assert device_list_view != null;
-        device_list_view.setAdapter(mListViewAdapter);
-        device_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                BtLeService.INSTANCE.stopScan();
 
-                // get selected info
-                final BtLeDevice device = mListViewAdapter.getItem(position);
-                log("device: " + device.getName() + ", " + device.getAddress());
-
-                Bundle bundle = new Bundle();
-                bundle.putString("addr", device.getAddress());
-
-                Intent intent = new Intent(SelectDeviceActivity.this, ShowDeviceActivity.class);
-                // Intent intent = new Intent(SelectDeviceActivity.this, ModifyPasswordActivity.class);
-                intent.putExtras(bundle);
-
-                startActivity(intent);
-            }
-        });
-    }
+//    // TODO
+//    private void setupUiComp() {
+//        ListView device_list_view = (ListView) findViewById(R.id.device_list_view);
+//        assert device_list_view != null;
+//        device_list_view.setAdapter(mListViewAdapter);
+//        device_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                BtLeService.INSTANCE.stopScan();
+//
+//                // get selected info
+//                final BtLeDevice device = mListViewAdapter.getItem(position);
+//                log("device: " + device.getName() + ", " + device.getAddress());
+//
+//                Bundle bundle = new Bundle();
+//                bundle.putString("addr", device.getAddress());
+//
+//                Intent intent = new Intent(SelectDeviceActivity.this, ShowDeviceActivity.class);
+//                // Intent intent = new Intent(SelectDeviceActivity.this, ModifyPasswordActivity.class);
+//                intent.putExtras(bundle);
+//
+//                startActivity(intent);
+//            }
+//        });
+//    }
 
 
     @Override
