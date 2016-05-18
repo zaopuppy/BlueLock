@@ -13,7 +13,7 @@ public class GlobalObjects {
 
     public static Timer timer = new Timer();
 
-    public static int unlockMode = UNLOCK_MODE_AUTO;
+    public static volatile int unlockMode = UNLOCK_MODE_AUTO;
 
     public static int senseLevel = 40;
 }

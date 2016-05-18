@@ -3,6 +3,7 @@ package com.example.zero.androidskeleton.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Window;
 import android.view.WindowManager;
 import com.example.zero.androidskeleton.GlobalObjects;
@@ -10,7 +11,7 @@ import com.example.zero.androidskeleton.R;
 
 import java.util.TimerTask;
 
-public class SplashActivity extends BaseActivity {
+public class SplashActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -20,6 +20,8 @@ import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
 import android.widget.ImageView;
 import com.example.zero.androidskeleton.GlobalObjects;
 import com.example.zero.androidskeleton.R;
@@ -31,6 +33,7 @@ import com.example.zero.androidskeleton.log.Log;
 import com.example.zero.androidskeleton.state.Context;
 import com.example.zero.androidskeleton.state.State;
 import com.example.zero.androidskeleton.state.StateMachine;
+import com.example.zero.androidskeleton.ui.anim.Rotate3dAnimation;
 import com.example.zero.androidskeleton.utils.Utils;
 
 /**
@@ -51,7 +54,7 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_show_device_main);;
+        setContentView(R.layout.activity_show_device_main);
 
         android.support.v7.widget.Toolbar toolbar = (android.support.v7.widget.Toolbar) findViewById(R.id.activity_show_device_toolbar);
         setSupportActionBar(toolbar);
@@ -63,8 +66,6 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view_show);
         navigationView.setNavigationItemSelectedListener(this);
-
-
 
         Intent intent = getIntent();
         if (intent == null || intent.getExtras() == null) {
@@ -99,6 +100,34 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
 
         mUnlockImg = (ImageView) findViewById(R.id.icon_mode_img);
         assert mUnlockImg != null;
+
+        mPasswordEdit.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (GlobalObjects.unlockMode != GlobalObjects.UNLOCK_MODE_AUTO) {
+                    return;
+                }
+
+                String password = mPasswordEdit.getText().toString();
+                if (password.length() != 6) {
+                    return;
+                }
+
+                // cancel previous task
+                // unlockSM.handle(EVENT_CANCEL, -1, null);
+
+                // try this one
+                unlockSM.handle(EVENT_UNLOCK, -1, password);
+            }
+        });
     }
 
     @Override
@@ -168,15 +197,18 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
     protected void onResume() {
         super.onResume();
 
+        Log.i(TAG, "onResume");
+
         if (mDevice != null) {
             mDevice.addDeviceListener(this);
         }
         mSensorManager.unregisterListener(this);
 
+        mUnlockImg.setImageResource(getUnlockImage());
+
         // 根据不同的模式决定界面如何显示
         switch (GlobalObjects.unlockMode) {
             case GlobalObjects.UNLOCK_MODE_MANUNAL: {
-                mUnlockImg.setImageResource(R.drawable.icon_green_manual);
                 mUnlockImg.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -191,34 +223,10 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
                 break;
             }
             case GlobalObjects.UNLOCK_MODE_AUTO: {
-                mUnlockImg.setImageResource(R.drawable.icon_green_auto);
-                mPasswordEdit.addTextChangedListener(new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                    }
-
-                    @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    }
-
-                    @Override
-                    public void afterTextChanged(Editable s) {
-                        String password = mPasswordEdit.getText().toString();
-                        if (password.length() != 6) {
-                            return;
-                        }
-
-                        // cancel previous task
-                        // unlockSM.handle(EVENT_CANCEL, -1, null);
-
-                        // try this one
-                        unlockSM.handle(EVENT_UNLOCK, -1, password);
-                    }
-                });
+                mUnlockImg.setOnClickListener(null);
                 break;
             }
             case GlobalObjects.UNLOCK_MODE_SHAKE: {
-                mUnlockImg.setImageResource(R.drawable.icon_green_rock);
                 mUnlockImg.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -234,6 +242,32 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
             }
             default:
                 break;
+        }
+    }
+
+    private static int getUnlockImage() {
+        switch (GlobalObjects.unlockMode) {
+            case GlobalObjects.UNLOCK_MODE_MANUNAL:
+                return R.drawable.icon_manualmode_lock;
+            case GlobalObjects.UNLOCK_MODE_AUTO:
+                return R.drawable.icon_automode_lock;
+            case GlobalObjects.UNLOCK_MODE_SHAKE:
+                return R.drawable.icon_rockmode_lock;
+            default:
+                return R.drawable.icon_manualmode_lock;
+        }
+    }
+
+    private static int getUnlockImageSuccess() {
+        switch (GlobalObjects.unlockMode) {
+            case GlobalObjects.UNLOCK_MODE_MANUNAL:
+                return R.drawable.icon_manualmode_succeed;
+            case GlobalObjects.UNLOCK_MODE_AUTO:
+                return R.drawable.icon_automode_succeed;
+            case GlobalObjects.UNLOCK_MODE_SHAKE:
+                return R.drawable.icon_rockmode_succeed;
+            default:
+                return R.drawable.icon_manualmode_succeed;
         }
     }
 
@@ -457,8 +491,43 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
             @Override
             public void run() {
                 Utils.makeToast(getApplicationContext(), BlueLockProtocol.getCodeDesc(result));
+                if (result == BlueLockProtocol.RESULT_PASSWORD_CORRECT) {
+                    playSuccessAnima();
+                }
             }
         });
+
+    }
+
+    private static final long ANIME_INTERVAL = 100;
+    private void playSuccessAnima() {
+        mUnlockImg.setImageResource(getUnlockImage());
+        Rotate3dAnimation anime1 = new Rotate3dAnimation(
+                0, 90, mUnlockImg.getWidth()/2.0f, mUnlockImg.getHeight()/2.0f, 310.0f, true);
+        anime1.setDuration(ANIME_INTERVAL);
+        anime1.setFillAfter(true);
+        anime1.setInterpolator(new AccelerateInterpolator());
+        anime1.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                mUnlockImg.setImageResource(getUnlockImageSuccess());
+                Rotate3dAnimation anime2 = new Rotate3dAnimation(
+                        90, 180, mUnlockImg.getWidth()/2.0f, mUnlockImg.getHeight()/2.0f, 310.0f, false);
+                anime2.setDuration(ANIME_INTERVAL);
+                anime2.setFillAfter(true);
+                anime2.setInterpolator(new AccelerateInterpolator());
+                mUnlockImg.startAnimation(anime2);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+            }
+        });
+        mUnlockImg.startAnimation(anime1);
     }
 
     @Override

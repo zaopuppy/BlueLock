@@ -27,17 +27,18 @@
     <ImageView
         android:id="@+id/icon_mode_img"
         android:layout_below="@id/password_edit"
-        android:layout_margin="40dp"
+        android:layout_marginTop="40dp"
         android:layout_width="180dp"
         android:layout_height="180dp"
         android:layout_centerHorizontal="true"
-        android:src="@drawable/icon_green_auto"
+        android:src="@drawable/icon_manualmode_lock"
         />
 
     <ImageView
         android:id="@+id/icon_hint_img"
         android:layout_below="@id/icon_mode_img"
-        android:layout_margin="20dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="20dp"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_centerHorizontal="true"
