@@ -10,7 +10,7 @@ import android.widget.TextView;
 import com.example.zero.androidskeleton.GlobalObjects;
 import com.example.zero.androidskeleton.R;
 
-public class ModeSettingActivity extends AppCompatActivity {
+public class ModeSettingActivity extends BaseActivity {
 
     private LinearLayout manualModeLayout;
     private ImageView manualModeImg;

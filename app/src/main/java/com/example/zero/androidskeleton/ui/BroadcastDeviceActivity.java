@@ -15,7 +15,7 @@ import com.example.zero.androidskeleton.R;
  * allow see this stackoverflow thread about the same issue
  * Android 4.3 as a Bluetooth LE Peripheral (http://stackoverflow.com/questions/18008507/android-4-3-as-a-bluetooth-le-peripheral)
  */
-public class BroadcastDeviceActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class BroadcastDeviceActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

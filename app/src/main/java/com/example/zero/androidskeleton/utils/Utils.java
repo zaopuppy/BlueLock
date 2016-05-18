@@ -64,6 +64,9 @@ public class Utils {
     public static String getPhoneNum(Context context) {
         TelephonyManager manager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         String phone = manager.getLine1Number();
+        if (phone == null) {
+            return null;
+        }
         // FIXME: hard coded...
         if (!phone.startsWith("+86")) {
             return phone;

@@ -1,25 +1,20 @@
 package com.example.zero.androidskeleton.ui;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
-import android.widget.ToggleButton;
 import com.example.zero.androidskeleton.R;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
@@ -29,14 +24,13 @@ import com.example.zero.androidskeleton.sort.PinyinComparator;
 import com.example.zero.androidskeleton.sort.SideBar;
 import com.example.zero.androidskeleton.sort.SideBar.OnTouchingLetterChangedListener;
 import com.example.zero.androidskeleton.sort.SortAdapter;
-import com.example.zero.androidskeleton.sort.SortModel;
 import com.example.zero.androidskeleton.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class SelectDeviceActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class SelectDeviceActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "SelectDeviceActivity";
 
@@ -54,11 +48,8 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
      * 根据拼音来排列ListView里面的数据类
      */
     private PinyinComparator pinyinComparator;
-
-
-    private void log(final String msg) {
-        Log.i(TAG, msg + '\n');
-    }
+    private DrawerLayout mDrawer;
+    NavigationView navView = null;
 
     private class MyScanListener implements BtLeService.ScanListener {
 
@@ -77,47 +68,34 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
 
     private final MyScanListener mScanListener = new MyScanListener();
 
-    private void checkAllMyPermission() {
-        final String[] permission_list = {
-            Manifest.permission.BLUETOOTH,
-            Manifest.permission.BLUETOOTH_ADMIN,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-        };
-        for (String permission: permission_list) {
-            checkMyPermission(permission);
-        }
-    }
-
-    private void checkMyPermission(String permission) {
-        int result = ContextCompat.checkSelfPermission(getApplicationContext(), permission);
-        if (result == PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-
-        ActivityCompat.requestPermissions(this, new String[] { permission }, 0);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = this;
-
-        checkAllMyPermission();
 
         setContentView(R.layout.activity_select_device_main);
 
         android.support.v7.widget.Toolbar toolbar = (android.support.v7.widget.Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        assert mDrawer != null;
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
+                this, mDrawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mDrawer.setDrawerListener(toggle);
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        View headView = navigationView.getHeaderView(0);
+        ImageView imageView = (ImageView) headView.findViewById(R.id.backImg);
+        imageView.setOnClickListener(new View.OnClickListener() {
 
+            @Override
+            public void onClick(View v) {
+                mDrawer.closeDrawer(GravityCompat.START);
+            }
+        });
 
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Utils.makeToast(this, "该手机不支持低功耗蓝牙");
@@ -168,7 +146,7 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
 
                 // get selected info
                 final BtLeDevice device = mSortAdapter.getItem(position);
-                log("device: " + device.getName() + ", " + device.getAddress());
+                Log.i(TAG, "device: " + device.getName() + ", " + device.getAddress());
 
                 Bundle bundle = new Bundle();
                 bundle.putString("addr", device.getAddress());
@@ -181,7 +159,6 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
             }
         });
 
-
         // 根据a-z进行排序源数据
         Collections.sort(SourceDateList, pinyinComparator);
         mSortAdapter = new SortAdapter(mContext, R.layout.select_list_item_device, SourceDateList);
@@ -189,9 +166,8 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
 
     }
 
-
     private void startScan() {
-        mSortAdapter.clear();
+        BtLeService.INSTANCE.stopScan();
         BtLeService.INSTANCE.startScan();
         invalidateOptionsMenu();
     }
@@ -249,8 +225,6 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
         }
         return true;
     }
-
-    private ToggleButton mAutoButton;
     
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -267,8 +241,7 @@ public class SelectDeviceActivity extends AppCompatActivity implements Navigatio
 
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
+        mDrawer.closeDrawer(GravityCompat.START);
         return true;
     }
 }
