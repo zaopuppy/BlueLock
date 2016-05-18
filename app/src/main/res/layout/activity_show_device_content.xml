@@ -21,7 +21,7 @@
         android:inputType="numberPassword"
         android:maxLines="1"
         android:maxLength="12"
-        android:hint="输入密码"
+        app:hint="输入密码"
         android:imeOptions="actionDone"/>
 
     <ImageView
