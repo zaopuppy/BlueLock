@@ -50,6 +50,7 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
 
     private PasswordEdit mPasswordEdit;
     private ImageView mUnlockImg;
+    private ImageView mUnlockHintImg;
     private TextView mUnlockHint;
 
     @Override
@@ -112,6 +113,9 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
         mUnlockImg = (ImageView) findViewById(R.id.icon_mode_img);
         assert mUnlockImg != null;
 
+        mUnlockHintImg = (ImageView) findViewById(R.id.icon_hint_img);
+        assert mUnlockHintImg != null;
+
         mUnlockHint = (TextView) findViewById(R.id.result_hint);
         assert mUnlockHint != null;
 
@@ -146,45 +150,47 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.show_device_menu, menu);
-
-        final BtLeDevice.State state;
-        if (mDevice == null) {
-            state = BtLeDevice.State.DISCONNECTED;
-        } else {
-            state = mDevice.getState();
-        }
-
-        switch (state) {
-            case DISCONNECTED:
-                menu.findItem(R.id.menu_connect).setVisible(true);
-                menu.findItem(R.id.menu_disconnect).setVisible(false);
-                menu.findItem(R.id.menu_refresh).setActionView(null);
-                break;
-            case READY:
-                menu.findItem(R.id.menu_connect).setVisible(false);
-                menu.findItem(R.id.menu_disconnect).setVisible(true);
-                menu.findItem(R.id.menu_refresh).setActionView(null);
-                break;
-            case CONNECTING:
-            case CONNECTED:
-            case DISCOVERING_SERVICE:
-                menu.findItem(R.id.menu_connect).setVisible(false);
-                menu.findItem(R.id.menu_disconnect).setVisible(true);
-                menu.findItem(R.id.menu_refresh).setActionView(
-                        R.layout.actionbar_indeterminate_progress);
-                break;
-            case DISCONNECTING:
-                menu.findItem(R.id.menu_connect).setVisible(true);
-                menu.findItem(R.id.menu_connect).setEnabled(false);
-                menu.findItem(R.id.menu_disconnect).setVisible(false);
-                menu.findItem(R.id.menu_refresh).setActionView(
-                        R.layout.actionbar_indeterminate_progress);
-                break;
-            default:
-                break;
-        }
-        return true;
+        return super.onCreateOptionsMenu(menu);
+        //
+        //getMenuInflater().inflate(R.menu.show_device_menu, menu);
+        //
+        //final BtLeDevice.State state;
+        //if (mDevice == null) {
+        //    state = BtLeDevice.State.DISCONNECTED;
+        //} else {
+        //    state = mDevice.getState();
+        //}
+        //
+        //switch (state) {
+        //    case DISCONNECTED:
+        //        menu.findItem(R.id.menu_connect).setVisible(true);
+        //        menu.findItem(R.id.menu_disconnect).setVisible(false);
+        //        menu.findItem(R.id.menu_refresh).setActionView(null);
+        //        break;
+        //    case READY:
+        //        menu.findItem(R.id.menu_connect).setVisible(false);
+        //        menu.findItem(R.id.menu_disconnect).setVisible(true);
+        //        menu.findItem(R.id.menu_refresh).setActionView(null);
+        //        break;
+        //    case CONNECTING:
+        //    case CONNECTED:
+        //    case DISCOVERING_SERVICE:
+        //        menu.findItem(R.id.menu_connect).setVisible(false);
+        //        menu.findItem(R.id.menu_disconnect).setVisible(true);
+        //        menu.findItem(R.id.menu_refresh).setActionView(
+        //                R.layout.actionbar_indeterminate_progress);
+        //        break;
+        //    case DISCONNECTING:
+        //        menu.findItem(R.id.menu_connect).setVisible(true);
+        //        menu.findItem(R.id.menu_connect).setEnabled(false);
+        //        menu.findItem(R.id.menu_disconnect).setVisible(false);
+        //        menu.findItem(R.id.menu_refresh).setActionView(
+        //                R.layout.actionbar_indeterminate_progress);
+        //        break;
+        //    default:
+        //        break;
+        //}
+        //return true;
     }
 
     @Override
@@ -217,9 +223,12 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
 
         mUnlockImg.setImageResource(getUnlockImage());
 
+        mUnlockHintImg.setVisibility(View.INVISIBLE);
+
         // 根据不同的模式决定界面如何显示
         switch (GlobalObjects.unlockMode) {
             case GlobalObjects.UNLOCK_MODE_MANUNAL: {
+                mUnlockHintImg.setVisibility(View.VISIBLE);
                 mUnlockImg.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -539,6 +548,20 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
                     anime2.setDuration(ANIME_INTERVAL);
                     anime2.setFillAfter(true);
                     anime2.setInterpolator(new AccelerateInterpolator());
+                    anime2.setAnimationListener(new Animation.AnimationListener() {
+                        @Override
+                        public void onAnimationStart(Animation animation) {
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animation animation) {
+                            mUnlockHint.setText("解锁成功");
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animation animation) {
+                        }
+                    });
                     mUnlockImg.startAnimation(anime2);
                 }
 
@@ -547,6 +570,8 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
                 }
             });
             mUnlockImg.startAnimation(anime1);
+        } else {
+            mUnlockHint.setText("解锁失败");
         }
     }
 
@@ -586,7 +611,11 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
 
         switch (id) {
             case R.id.nav_show_password: {
+                Bundle bundle = new Bundle();
+                bundle.putString("addr", mDevice.getAddress());
+
                 Intent intent = new Intent(this, ModifyPasswordActivity.class);
+                intent.putExtras(bundle);
                 startActivity(intent);
                 break;
             }

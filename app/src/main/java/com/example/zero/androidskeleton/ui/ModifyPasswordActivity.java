@@ -44,18 +44,25 @@ public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.D
         }
 
         setupUiComp();
+
+        mDevice.addDeviceListener(this);
     }
 
     @Override
     protected void onResume() {
-        mDevice.addDeviceListener(this);
         super.onResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+
+    }
+
+    @Override
+    protected void onDestroy() {
         mDevice.removeDeviceListener(this);
+        super.onDestroy();
     }
 
     private void setupUiComp() {
