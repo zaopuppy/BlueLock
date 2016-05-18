@@ -23,6 +23,7 @@ import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.widget.ImageView;
+import android.widget.TextView;
 import com.example.zero.androidskeleton.GlobalObjects;
 import com.example.zero.androidskeleton.R;
 import com.example.zero.androidskeleton.bt.BlueLockProtocol;
@@ -49,6 +50,7 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
 
     private PasswordEdit mPasswordEdit;
     private ImageView mUnlockImg;
+    private TextView mUnlockHint;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +111,9 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
 
         mUnlockImg = (ImageView) findViewById(R.id.icon_mode_img);
         assert mUnlockImg != null;
+
+        mUnlockHint = (TextView) findViewById(R.id.result_hint);
+        assert mUnlockHint != null;
 
         mPasswordEdit.addTextChangedListener(new TextWatcher() {
             @Override
@@ -503,7 +508,9 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
             public void run() {
                 Utils.makeToast(getApplicationContext(), BlueLockProtocol.getCodeDesc(result));
                 if (result == BlueLockProtocol.RESULT_PASSWORD_CORRECT) {
-                    playSuccessAnima();
+                    playAnime(true);
+                } else {
+                    playAnime(false);
                 }
             }
         });
@@ -511,34 +518,36 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
     }
 
     private static final long ANIME_INTERVAL = 100;
-    private void playSuccessAnima() {
+    private void playAnime(boolean result) {
         mUnlockImg.setImageResource(getUnlockImage());
-        Rotate3dAnimation anime1 = new Rotate3dAnimation(
-                0, 90, mUnlockImg.getWidth()/2.0f, mUnlockImg.getHeight()/2.0f, 310.0f, true);
-        anime1.setDuration(ANIME_INTERVAL);
-        anime1.setFillAfter(true);
-        anime1.setInterpolator(new AccelerateInterpolator());
-        anime1.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
+        if (result) {
+            Rotate3dAnimation anime1 = new Rotate3dAnimation(
+                0, 90, mUnlockImg.getWidth() / 2.0f, mUnlockImg.getHeight() / 2.0f, 310.0f, true);
+            anime1.setDuration(ANIME_INTERVAL);
+            anime1.setFillAfter(true);
+            anime1.setInterpolator(new AccelerateInterpolator());
+            anime1.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+                }
 
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                mUnlockImg.setImageResource(getUnlockImageSuccess());
-                Rotate3dAnimation anime2 = new Rotate3dAnimation(
-                        90, 180, mUnlockImg.getWidth()/2.0f, mUnlockImg.getHeight()/2.0f, 310.0f, false);
-                anime2.setDuration(ANIME_INTERVAL);
-                anime2.setFillAfter(true);
-                anime2.setInterpolator(new AccelerateInterpolator());
-                mUnlockImg.startAnimation(anime2);
-            }
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    mUnlockImg.setImageResource(getUnlockImageSuccess());
+                    Rotate3dAnimation anime2 = new Rotate3dAnimation(
+                        90, 0, mUnlockImg.getWidth() / 2.0f, mUnlockImg.getHeight() / 2.0f, 310.0f, false);
+                    anime2.setDuration(ANIME_INTERVAL);
+                    anime2.setFillAfter(true);
+                    anime2.setInterpolator(new AccelerateInterpolator());
+                    mUnlockImg.startAnimation(anime2);
+                }
 
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-        });
-        mUnlockImg.startAnimation(anime1);
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+                }
+            });
+            mUnlockImg.startAnimation(anime1);
+        }
     }
 
     @Override
