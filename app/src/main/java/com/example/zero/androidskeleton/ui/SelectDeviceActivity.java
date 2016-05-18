@@ -232,9 +232,9 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
         int id = item.getItemId();
 
         if (id == R.id.nav_camera) {
-            // Handle the camera action
+            mSortSideBar.setVisibility(View.INVISIBLE);
         } else if (id == R.id.nav_gallery) {
-
+            mSortSideBar.setVisibility(View.VISIBLE);
         } else if (id == R.id.nav_slideshow) {
 
         } else if (id == R.id.nav_send) {

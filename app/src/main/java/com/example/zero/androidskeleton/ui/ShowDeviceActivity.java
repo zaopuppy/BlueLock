@@ -85,7 +85,6 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
         Log.e(TAG, "action bar: " + actionBar);
         if (actionBar != null) {
             actionBar.setTitle(mDevice.getName());
-            actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
         setupUiComp();
