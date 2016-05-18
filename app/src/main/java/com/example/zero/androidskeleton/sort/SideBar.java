@@ -88,7 +88,7 @@ public class SideBar extends View {
             break;
 
         default:
-            setBackgroundResource(R.drawable.activity_select_device_sidebar);
+//            setBackgroundResource(R.drawable.activity_select_device_sidebar);
             if (oldChoose != c) {
                 if (c >= 0 && c < b.length) {
                     if (listener != null) {
