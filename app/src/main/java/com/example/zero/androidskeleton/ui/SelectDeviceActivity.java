@@ -43,7 +43,7 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
      * 汉字转换成拼音的类
      */
     private CharacterParser characterParser;
-    private List<BtLeDevice> SourceDateList = new ArrayList<>();
+    private List<BtLeDevice> sourceDateList = new ArrayList<>();
     /**
      * 根据拼音来排列ListView里面的数据类
      */
@@ -55,8 +55,8 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
 
         @Override
         public void onDeviceFound(BtLeDevice dev) {
-            SourceDateList.add(dev);
-            mSortAdapter = new SortAdapter(mContext, R.layout.select_list_item_device, SourceDateList);
+            sourceDateList.add(dev);
+            mSortAdapter = new SortAdapter(mContext, R.layout.select_list_item_device, sourceDateList);
             mSortListView.setAdapter(mSortAdapter);
         }
 
@@ -76,7 +76,10 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
         setContentView(R.layout.activity_select_device_main);
 
         android.support.v7.widget.Toolbar toolbar = (android.support.v7.widget.Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        if (toolbar != null) {
+            toolbar.setTitle("扫描设备");
+            setSupportActionBar(toolbar);
+        }
 
         mDrawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         assert mDrawer != null;
@@ -141,7 +144,7 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //这里要利用adapter.getItem(position)来获取当前position所对应的对象
-                BtLeService.INSTANCE.stopScan();
+                stopScan();
 
                 // get selected info
                 final BtLeDevice device = mSortAdapter.getItem(position);
@@ -159,14 +162,17 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
         });
 
         // 根据a-z进行排序源数据
-        Collections.sort(SourceDateList, pinyinComparator);
-        mSortAdapter = new SortAdapter(mContext, R.layout.select_list_item_device, SourceDateList);
+        Collections.sort(sourceDateList, pinyinComparator);
+        mSortAdapter = new SortAdapter(mContext, R.layout.select_list_item_device, sourceDateList);
         mSortListView.setAdapter(mSortAdapter);
 
     }
 
     private void startScan() {
         BtLeService.INSTANCE.stopScan();
+        sourceDateList.clear();
+        mSortAdapter = new SortAdapter(mContext, R.layout.select_list_item_device, sourceDateList);
+        mSortListView.setAdapter(mSortAdapter);
         BtLeService.INSTANCE.startScan();
         invalidateOptionsMenu();
     }

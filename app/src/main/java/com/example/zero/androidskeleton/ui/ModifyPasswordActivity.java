@@ -4,6 +4,8 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import com.example.zero.androidskeleton.R;
@@ -43,6 +45,12 @@ public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.D
             return;
         }
 
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setTitle("修改密码");
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+
         setupUiComp();
 
         mDevice.addDeviceListener(this);
@@ -63,6 +71,16 @@ public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.D
     protected void onDestroy() {
         mDevice.removeDeviceListener(this);
         super.onDestroy();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
+        }
     }
 
     private void setupUiComp() {

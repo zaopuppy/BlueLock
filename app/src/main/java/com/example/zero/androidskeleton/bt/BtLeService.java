@@ -139,6 +139,7 @@ public class BtLeService {
     public int startScan() {
         Log.e(TAG, "startScan");
         stopScan();
+        clearDevices();
         setScanning(true);
         getScanner().startScan(mScanCallback);
         mTimer.schedule(new ScanTimerTask(mSeqGen.next()), MAX_SCAN_TIME);

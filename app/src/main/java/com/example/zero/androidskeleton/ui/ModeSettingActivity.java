@@ -1,8 +1,10 @@
 package com.example.zero.androidskeleton.ui;
 
 import android.graphics.Color;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -29,6 +31,12 @@ public class ModeSettingActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mode_setting);
 
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setTitle("开门模式设置");
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+
         setupUiComp();
     }
 
@@ -36,6 +44,16 @@ public class ModeSettingActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         setMode(GlobalObjects.unlockMode);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
+        }
     }
 
     private void setupUiComp() {
