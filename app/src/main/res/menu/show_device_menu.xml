@@ -5,15 +5,18 @@
         android:title=""
         android:checkable="false"
         android:orderInCategory="1"
+        android:visible="false"
         app:showAsAction="ifRoom"/>
 
     <item android:id="@+id/menu_connect"
         android:title="Connect"
         android:orderInCategory="100"
+        android:visible="false"
         app:showAsAction="ifRoom|withText"/>
 
     <item android:id="@+id/menu_disconnect"
         android:title="Disconnect"
         android:orderInCategory="101"
+        android:visible="false"
         app:showAsAction="ifRoom|withText"/>
 </menu>

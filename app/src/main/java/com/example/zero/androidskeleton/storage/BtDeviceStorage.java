@@ -1,31 +1,63 @@
 package com.example.zero.androidskeleton.storage;
 
 import android.content.Context;
-import com.example.zero.androidskeleton.utils.SpManager;
 
 /**
  * Created by zero on 4/14/16.
  */
 public class BtDeviceStorage {
+
+    public static class DeviceInfo implements Storage.Savable {
+        private String name;
+        private String addr;
+        private String password;
+
+        public DeviceInfo() {}
+
+        public DeviceInfo(String name, String addr) {
+            this.name = name;
+            this.addr = addr;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getAddr() {
+            return addr;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+    }
+
     public static BtDeviceStorage INSTANCE = new BtDeviceStorage();
 
-    //public static final int FLAG_NOT_SAVED = 0;
-    //public static final int FLAG_SAVED = 1;
+    private Storage storage;
 
-    private SpManager mSpManager;
-
-    private BtDeviceStorage() {
+    public boolean init(Context context) {
+        storage = new SharedPreferenceStorage(context, "bt_devices");
+        return true;
     }
 
-    public void init(Context context) {
-        mSpManager = new SpManager(context, "saved_devices");
+    public boolean put(DeviceInfo deviceInfo) {
+        if (deviceInfo == null) {
+            return false;
+        }
+
+        return storage.put(deviceInfo.getAddr(), deviceInfo);
     }
 
-    public int get(String address) {
-        return mSpManager.getInt(address, -1);
-    }
+    public DeviceInfo get(String addr) {
+        if (addr == null) {
+            return null;
+        }
 
-    public void put(String address, int password) {
-        mSpManager.putInt(address, password);
+        return storage.get(addr, DeviceInfo.class);
     }
 }

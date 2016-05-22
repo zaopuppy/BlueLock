@@ -84,6 +84,10 @@ public class PasswordEdit extends LinearLayout {
         return mEditText.getText();
     }
 
+    public void setText(String text) {
+        mEditText.setText(text);
+    }
+
     public void addTextChangedListener(TextWatcher textWatcher) {
         mEditText.addTextChangedListener(textWatcher);
     }

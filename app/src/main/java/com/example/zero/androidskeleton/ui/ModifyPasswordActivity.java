@@ -8,6 +8,7 @@ import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import com.example.zero.androidskeleton.GlobalObjects;
 import com.example.zero.androidskeleton.R;
 import com.example.zero.androidskeleton.bt.BlueLockProtocol;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
@@ -17,7 +18,10 @@ import com.example.zero.androidskeleton.log.Log;
 import com.example.zero.androidskeleton.state.Context;
 import com.example.zero.androidskeleton.state.State;
 import com.example.zero.androidskeleton.state.StateMachine;
+import com.example.zero.androidskeleton.storage.BtDeviceStorage;
 import com.example.zero.androidskeleton.utils.Utils;
+
+import java.util.TimerTask;
 
 
 public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.DeviceListener {
@@ -25,6 +29,8 @@ public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.D
     private static final String TAG = "ModifyPasswordActivity";
 
     private BtLeDevice mDevice = null;
+    private Button confirmButton;
+    private PasswordEdit newPasswordEdit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,15 +93,15 @@ public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.D
         final PasswordEdit adminPasswordEdit = (PasswordEdit) findViewById(R.id.admin_password_edit);
         assert adminPasswordEdit != null;
 
-        final PasswordEdit passwordEdit = (PasswordEdit) findViewById(R.id.password_edit);
-        assert passwordEdit != null;
+        //final PasswordEdit passwordEdit = (PasswordEdit) findViewById(R.id.password_edit);
+        //assert passwordEdit != null;
 
-        final PasswordEdit newPasswordEdit = (PasswordEdit) findViewById(R.id.new_password_edit);
+        newPasswordEdit = (PasswordEdit) findViewById(R.id.new_password_edit);
         assert newPasswordEdit != null;
 
         Button cancelButton = (Button) findViewById(R.id.cancel_button);
         assert cancelButton != null;
-        Button confirmButton = (Button) findViewById(R.id.confirm_button);
+        confirmButton = (Button) findViewById(R.id.confirm_button);
         assert confirmButton != null;
 
         cancelButton.setOnClickListener(new View.OnClickListener() {
@@ -109,17 +115,27 @@ public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.D
         confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                confirmButton.setEnabled(false);
                 ModifyPasswordData data = new ModifyPasswordData(
                     mDevice.getAddress(),
                     adminPasswordEdit.getText().toString(),
-                    passwordEdit.getText().toString(),
                     newPasswordEdit.getText().toString());
 
                 if (!data.isValid()) {
                     Utils.makeToast(getApplicationContext(), "bad password, please check again");
+                    GlobalObjects.timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    confirmButton.setEnabled(true);
+                                }
+                            });
+                        }
+                    }, 3000);
                     return;
                 }
-
                 modify(data);
             }
         });
@@ -137,13 +153,11 @@ public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.D
     private static class ModifyPasswordData {
         final String addr;
         final String adminPassword;
-        final String password;
         final String newPassword;
 
-        ModifyPasswordData(String addr, String adminPassword, String password, String newPassword) {
+        ModifyPasswordData(String addr, String adminPassword, String newPassword) {
             this.addr = addr;
             this.adminPassword = adminPassword;
-            this.password = password;
             this.newPassword = newPassword;
         }
 
@@ -155,11 +169,6 @@ public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.D
 
             if (adminPassword == null || adminPassword.length() != 6) {
                 Log.i(TAG, "bad admin password");
-                return false;
-            }
-
-            if (password == null || password.length() != 6) {
-                Log.i(TAG, "bad old password");
                 return false;
             }
 
@@ -345,6 +354,20 @@ public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.D
                 Utils.makeToast(getApplicationContext(), BlueLockProtocol.getCodeDesc(result));
             }
         });
+
+        if (result == BlueLockProtocol.RESULT_PASSWORD_CHANGED) {
+            BtDeviceStorage.DeviceInfo info = BtDeviceStorage.INSTANCE.get(mDevice.getAddress());
+            if (info == null) {
+                info = new BtDeviceStorage.DeviceInfo(mDevice.getName(), mDevice.getAddress());
+            }
+            info.setPassword(newPasswordEdit.getText().toString());
+            BtDeviceStorage.INSTANCE.put(info);
+        }
+
+        if (result == BlueLockProtocol.RESULT_PASSWORD_CHANGED
+            || result == BlueLockProtocol.RESULT_ADMIN_PASSWORD_WRONG) {
+            confirmButton.setEnabled(true);
+        }
     }
 
     private void modify(ModifyPasswordData data) {

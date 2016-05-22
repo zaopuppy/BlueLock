@@ -75,6 +75,8 @@ public class ModeSettingActivity extends BaseActivity {
         {
             autoModeLayout = (LinearLayout) findViewById(R.id.auto_mode_layout);
             assert autoModeLayout != null;
+            // TODO: temporary disabled
+            autoModeLayout.setEnabled(false);
             autoModeLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

@@ -3,23 +3,27 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_camera"
+            android:id="@+id/nav_sort_by_signal"
             android:icon="@drawable/icon_signal_sidebar"
             android:title="信号顺序排列" />
         <item
-            android:id="@+id/nav_gallery"
+            android:id="@+id/nav_sort_by_name"
             android:icon="@drawable/icon_sidebar_az"
             android:title="字母顺序排列" />
         <item
-            android:id="@+id/nav_slideshow"
+            android:id="@+id/nav_sort_by_frequency"
             android:icon="@drawable/icon_sidebar_clock"
             android:title="使用频率排序" />
+        <item
+            android:id="@+id/nav_unlock_mode"
+            android:icon="@drawable/icon_sidebar_az"
+            android:title="开门模式设置" />
         <item
             android:id="@+id/nav_about"
             android:icon="@drawable/icon_sidebar_about"
             android:title="关于" />
         <item
-            android:id="@+id/nav_send"
+            android:id="@+id/nav_quit"
             android:icon="@drawable/icon_sidebar_exit"
             android:title="退出" />
     </group>

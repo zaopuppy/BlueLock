@@ -15,8 +15,6 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,11 +29,13 @@ import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
 import com.example.zero.androidskeleton.component.PasswordEdit;
 import com.example.zero.androidskeleton.log.Log;
-import com.example.zero.androidskeleton.state.Context;
-import com.example.zero.androidskeleton.state.State;
-import com.example.zero.androidskeleton.state.StateMachine;
+import com.example.zero.androidskeleton.state.impl.UnlockSM;
+import com.example.zero.androidskeleton.storage.BtDeviceStorage;
 import com.example.zero.androidskeleton.ui.anim.Rotate3dAnimation;
 import com.example.zero.androidskeleton.utils.Utils;
+
+import java.util.TimerTask;
+
 
 /**
  *
@@ -103,6 +103,8 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mVibrator = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
 
+        unlockSM = new UnlockSM(this, mDevice);
+
         mDevice.addDeviceListener(this);
     }
 
@@ -119,48 +121,57 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
         mUnlockHint = (TextView) findViewById(R.id.result_hint);
         assert mUnlockHint != null;
 
-        mPasswordEdit.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+        BtDeviceStorage.DeviceInfo info = BtDeviceStorage.INSTANCE.get(mDevice.getAddress());
+        if (info != null) {
+            mPasswordEdit.setText(info.getPassword());
+        }
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (GlobalObjects.unlockMode != GlobalObjects.UNLOCK_MODE_AUTO) {
-                    return;
-                }
-
-                String password = mPasswordEdit.getText().toString();
-                if (password.length() != 6) {
-                    return;
-                }
-
-                // cancel previous task
-                // unlockSM.handle(EVENT_CANCEL, -1, null);
-
-                // try this one
-                unlockSM.handle(EVENT_UNLOCK, -1, password);
-            }
-        });
+        //mPasswordEdit.addTextChangedListener(new TextWatcher() {
+        //    @Override
+        //    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        //    }
+        //
+        //    @Override
+        //    public void onTextChanged(CharSequence s, int start, int before, int count) {
+        //    }
+        //
+        //    @Override
+        //    public void afterTextChanged(Editable s) {
+        //        if (GlobalObjects.unlockMode != GlobalObjects.UNLOCK_MODE_AUTO) {
+        //            return;
+        //        }
+        //
+        //        String password = mPasswordEdit.getText().toString();
+        //        if (password.length() != 6) {
+        //            return;
+        //        }
+        //
+        //        // cancel previous task
+        //        // unlockSM.handle(EVENT_CANCEL, -1, null);
+        //
+        //        // try this one
+        //        unlockSM.handle(EVENT_UNLOCK, -1, password);
+        //    }
+        //});
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        return super.onCreateOptionsMenu(menu);
-        //
-        //getMenuInflater().inflate(R.menu.show_device_menu, menu);
-        //
-        //final BtLeDevice.State state;
-        //if (mDevice == null) {
-        //    state = BtLeDevice.State.DISCONNECTED;
-        //} else {
-        //    state = mDevice.getState();
-        //}
-        //
+
+        getMenuInflater().inflate(R.menu.show_device_menu, menu);
+
+        final BtLeDevice.State state;
+        if (mDevice == null) {
+            state = BtLeDevice.State.DISCONNECTED;
+        } else {
+            state = mDevice.getState();
+        }
+
+        // TODO: 暂时使用连接按钮来表示状态
+        MenuItem item = menu.findItem(R.id.menu_connect);
+        item.setVisible(true);
+        item.setEnabled(false);
+        item.setTitle(state.toString());
         //switch (state) {
         //    case DISCONNECTED:
         //        menu.findItem(R.id.menu_connect).setVisible(true);
@@ -190,7 +201,7 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
         //    default:
         //        break;
         //}
-        //return true;
+        return true;
     }
 
     @Override
@@ -219,7 +230,10 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
 
         Log.i(TAG, "onResume");
 
-        mSensorManager.unregisterListener(this);
+        mSensorManager.registerListener(
+            this,
+            mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+            SensorManager.SENSOR_DELAY_NORMAL);
 
         mUnlockImg.setImageResource(getUnlockImage());
 
@@ -237,6 +251,8 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
                             Utils.makeToast(getApplicationContext(), "password incorrect");
                             return;
                         }
+                        // disable touch first
+                        mUnlockImg.setOnClickListener(null);
                         unlock(password);
                     }
                 });
@@ -247,17 +263,7 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
                 break;
             }
             case GlobalObjects.UNLOCK_MODE_SHAKE: {
-                mUnlockImg.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        String password = mPasswordEdit.getText().toString();
-                        if (password.length() != 6) {
-                            Utils.makeToast(getApplicationContext(), "password incorrect");
-                            return;
-                        }
-                        unlock(password);
-                    }
-                });
+                mUnlockImg.setOnClickListener(null);
                 break;
             }
             default:
@@ -293,10 +299,7 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
 
     @Override
     protected void onPause() {
-        mSensorManager.registerListener(
-            this,
-            mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-            SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.unregisterListener(this);
         super.onPause();
     }
 
@@ -312,172 +315,10 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
     private void unlock(String password) {
         // FIXME: delete this line
         Log.d(TAG, "unlock: " + password);
-        unlockSM.handle(EVENT_UNLOCK, -1, password);
+        unlockSM.handle(UnlockSM.EVENT_UNLOCK, -1, password);
     }
 
-    private static final int EVENT_DEV_STATE_CHANGED = 1;
-    private static final int EVENT_UNLOCK = 2;
-
-    private final State IDLE = new IdleState();
-    private final State WAIT_FOR_DISCONNECT = new WaitForDisconnectState();
-    private final State WAIT_FOR_CONNECT = new WaitForConnectState();
-    private final State READY = new ReadyState();
-
-    private class IdleState implements State {
-        @Override
-        public void handle(Context context, int event, int arg, Object o) {
-            switch (event) {
-                case EVENT_UNLOCK:
-                    handleUnlock(context, arg, o);
-                default:
-                    // ignore
-                    break;
-            }
-        }
-
-        private void handleUnlock(Context context, int arg, Object o) {
-            if (!(o instanceof String)) {
-                Log.e(TAG, "bad argument, string password expected");
-                return;
-            }
-
-            String password = (String) o;
-
-            // save password first
-            context.putString("password", password);
-
-            // then connect
-            connect(context, arg, o);
-        }
-
-        private void connect(Context context, int arg, Object o) {
-            BtLeDevice.State state = mDevice.getState();
-            Log.d(TAG, "connect: current-state=" + state);
-
-            switch (state) {
-                case READY:
-                    context.setState(READY);
-                    context.handle(EVENT_UNLOCK, arg, o);
-                    break;
-                case DISCONNECTED:
-                    mDevice.connectGatt(ShowDeviceActivity.this);
-                    context.setState(WAIT_FOR_CONNECT);
-                    break;
-                default:
-                    mDevice.disconnectGatt();
-                    context.setState(WAIT_FOR_DISCONNECT);
-                    break;
-            }
-        }
-    }
-
-    private class WaitForDisconnectState implements State {
-        @Override
-        public void handle(Context context, int event, int arg, Object o) {
-            switch (event) {
-                case EVENT_DEV_STATE_CHANGED:
-                    BtLeDevice.State state = (BtLeDevice.State) o;
-                    if (state == BtLeDevice.State.DISCONNECTED) {
-                        mDevice.connectGatt(ShowDeviceActivity.this);
-                        context.setState(WAIT_FOR_CONNECT);
-                    } else {
-                        Log.w(TAG, "expect disconnect event, received: " + state);
-                    }
-                    break;
-                default:
-                    // ignore
-                    break;
-            }
-        }
-    }
-
-    private class WaitForConnectState implements State {
-        @Override
-        public void handle(Context context, int event, int arg, Object o) {
-            switch (event) {
-                case EVENT_DEV_STATE_CHANGED:
-                    BtLeDevice.State state = (BtLeDevice.State) o;
-                    handleStateChanged(context, state);
-                    break;
-                default:
-                    // ignore
-                    break;
-            }
-        }
-
-        private void handleStateChanged(Context context, BtLeDevice.State state) {
-            switch (state) {
-                case READY:
-                    context.setState(READY);
-                    String password = context.getString("password", null);
-                    Log.d(TAG, "context password: " + password);
-                    if (password != null) {
-                        context.handle(EVENT_UNLOCK, -1, password);
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-
-    private class ReadyState implements State {
-        @Override
-        public void handle(Context context, int event, int arg, Object o) {
-            switch (event) {
-                case EVENT_DEV_STATE_CHANGED:
-                    // BtLeDevice.State state = (BtLeDevice.State) o;
-                    // handleStateChanged(context, state);
-                    context.setState(IDLE);
-                    break;
-                case EVENT_UNLOCK:
-                    //String password = context.getString("password", null);
-                    //if (password == null) {
-                    //    log("no password , don't unlock");
-                    //    return;
-                    //}
-                    String password = (String) o;
-                    BluetoothGattCharacteristic char1 = mDevice.getCharacteristic(0xfff1);
-                    if (char1 == null) {
-                        Log.e(TAG, "failed to get characteristic 0xfff1");
-                        return;
-                    }
-                    mDevice.writeCharacteristic(char1, BlueLockProtocol.unlock(password), new BtLeDevice.ResultListener<Boolean>() {
-                        @Override
-                        public void onResult(Boolean result) {
-                            Log.d(TAG, "wrote password: " + result);
-                        }
-                    });
-                    String phoneNum = Utils.getPhoneNum(getApplicationContext());
-                    if (phoneNum == null || phoneNum.length() != 11) {
-                        Utils.makeToast(getApplicationContext(), "invalid phone number read: " + phoneNum);
-                        return;
-                    }
-                    mDevice.writeCharacteristic(char1, BlueLockProtocol.passPhone(phoneNum), new BtLeDevice.ResultListener<Boolean>() {
-                        @Override
-                        public void onResult(Boolean result) {
-                            Log.d(TAG, "wrote phone num: " + result);
-                        }
-                    });
-
-                    break;
-                default:
-                    // ignore
-                    break;
-            }
-        }
-    }
-
-    /**
-     * CONNECT --> OPEN --> TRANSFER-NUM -> DONE
-     */
-    private class UnlockSM extends StateMachine {
-        UnlockSM() {
-            init(IDLE);
-        }
-    }
-
-    private final UnlockSM unlockSM = new UnlockSM();
+    private UnlockSM unlockSM;
 
     private class AutoUnlockTask extends Thread {
         private boolean isStop;
@@ -493,7 +334,7 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
     public void onDeviceStateChanged(final BtLeDevice.State state) {
         Log.e(TAG, "new state: " + state);
 
-        unlockSM.handle(EVENT_DEV_STATE_CHANGED, -1, state);
+        unlockSM.handle(UnlockSM.EVENT_DEV_STATE_CHANGED, -1, state);
 
         runOnUiThread(new Runnable() {
             @Override
@@ -517,13 +358,44 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
             public void run() {
                 Utils.makeToast(getApplicationContext(), BlueLockProtocol.getCodeDesc(result));
                 if (result == BlueLockProtocol.RESULT_PASSWORD_CORRECT) {
+                    // 保存密码
+                    String password = mPasswordEdit.getText().toString();
+                    BtDeviceStorage.DeviceInfo info = BtDeviceStorage.INSTANCE.get(mDevice.getAddress());
+                    if (info == null) {
+                        info = new BtDeviceStorage.DeviceInfo(mDevice.getName(), mDevice.getAddress());
+                    }
+                    if (!password.equals(info.getPassword())) {
+                        info.setPassword(password);
+                        if (BtDeviceStorage.INSTANCE.put(info)) {
+                            Log.i(TAG, "password saved");
+                        } else {
+                            Log.e(TAG, "failed to save password");
+                        }
+                    }
+
                     playAnime(true);
-                } else {
+                    delayClearAndFinish();
+                } else if (result == BlueLockProtocol.RESULT_PASSWORD_WRONG){
                     playAnime(false);
+                    delayClearAndFinish();
                 }
             }
         });
 
+    }
+
+    private void delayClearAndFinish() {
+        GlobalObjects.timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        clearAndFinish();
+                    }
+                });
+            }
+        }, 1000);
     }
 
     private static final long ANIME_INTERVAL = 100;
@@ -619,11 +491,16 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
                 startActivity(intent);
                 break;
             }
-            case R.id.nav_show_mode: {
-                Intent intent = new Intent(this, ModeSettingActivity.class);
-                startActivity(intent);
+            //case R.id.nav_show_mode: {
+            //    Intent intent = new Intent(this, ModeSettingActivity.class);
+            //    startActivity(intent);
+            //    break;
+            //}
+            case R.id.nav_about:
                 break;
-            }
+            case R.id.nav_quit:
+                clearAndFinish();
+                break;
             default:
                 break;
         }
@@ -631,5 +508,14 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout_show);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void clearAndFinish() {
+        if (mDevice != null) {
+            mDevice.removeDeviceListener(this);
+            mDevice.disconnectGatt();
+        }
+        finish();
+
     }
 }

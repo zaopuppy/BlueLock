@@ -15,6 +15,7 @@ import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import com.example.zero.androidskeleton.GlobalObjects;
 import com.example.zero.androidskeleton.R;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
@@ -24,6 +25,8 @@ import com.example.zero.androidskeleton.sort.PinyinComparator;
 import com.example.zero.androidskeleton.sort.SideBar;
 import com.example.zero.androidskeleton.sort.SideBar.OnTouchingLetterChangedListener;
 import com.example.zero.androidskeleton.sort.SortAdapter;
+import com.example.zero.androidskeleton.state.impl.UnlockSM;
+import com.example.zero.androidskeleton.storage.BtDeviceStorage;
 import com.example.zero.androidskeleton.utils.Utils;
 
 import java.util.ArrayList;
@@ -49,7 +52,9 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
      */
     private PinyinComparator pinyinComparator;
     private DrawerLayout mDrawer;
-    NavigationView navView = null;
+
+    private UnlockSM unlockSM = null;
+
 
     private class MyScanListener implements BtLeService.ScanListener {
 
@@ -58,10 +63,18 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
             sourceDateList.add(dev);
             mSortAdapter = new SortAdapter(mContext, R.layout.select_list_item_device, sourceDateList);
             mSortListView.setAdapter(mSortAdapter);
+
+            BtDeviceStorage.DeviceInfo info = BtDeviceStorage.INSTANCE.get(dev.getAddress());
+            if (info != null) {
+                // a;
+            }
         }
 
         @Override
         public void onScanChange(boolean isScanning) {
+            if (!isScanning) {
+                autoUnlock = false;
+            }
             invalidateOptionsMenu();
         }
     }
@@ -112,6 +125,8 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
 //        setupUiComp();
 
         initViews();
+
+        // unlockSM = new UnlockSM(this, mD)
     }
 
     private void initViews() {
@@ -182,11 +197,16 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
         invalidateOptionsMenu();
     }
 
+    private boolean autoUnlock = false;
     @Override
     protected void onResume() {
         super.onResume();
         mSortAdapter.clear();
         BtLeService.INSTANCE.addScanListener(mScanListener);
+        if (GlobalObjects.unlockMode == GlobalObjects.UNLOCK_MODE_AUTO) {
+            autoUnlock = true;
+            startScan();
+        }
     }
 
     @Override
@@ -236,17 +256,29 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
+        if (id == R.id.nav_sort_by_signal) {
             mSortSideBar.setVisibility(View.INVISIBLE);
-        } else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.nav_sort_by_name) {
             mSortSideBar.setVisibility(View.VISIBLE);
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_send) {
-
+        } else if (id == R.id.nav_sort_by_frequency) {
+            //
+        } else if (id == R.id.nav_quit) {
+            clearAndFinish();
+        } else if (id == R.id.nav_unlock_mode) {
+            Intent intent = new Intent(this, ModeSettingActivity.class);
+            startActivity(intent);
         }
 
         mDrawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void clearAndFinish() {
+        BtLeService.INSTANCE.clearDevices();
+        sourceDateList.clear();
+        mSortAdapter = new SortAdapter(mContext, R.layout.select_list_item_device, sourceDateList);
+        mSortListView.setAdapter(mSortAdapter);
+        BtLeService.INSTANCE.stopScan();
+        finish();
     }
 }
