@@ -2,15 +2,14 @@ package com.example.zero.androidskeleton.ui;
 
 import android.graphics.Color;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import com.example.zero.androidskeleton.GlobalObjects;
 import com.example.zero.androidskeleton.R;
+import com.example.zero.androidskeleton.storage.Settings;
 
 public class ModeSettingActivity extends BaseActivity {
 
@@ -43,7 +42,7 @@ public class ModeSettingActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        setMode(GlobalObjects.unlockMode);
+        setMode_i(Settings.INSTANCE.getUnlockMode());
     }
 
     @Override
@@ -63,7 +62,7 @@ public class ModeSettingActivity extends BaseActivity {
             manualModeLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    setMode(GlobalObjects.UNLOCK_MODE_MANUNAL);
+                    setMode(Settings.UNLOCK_MODE_MANUNAL);
                 }
             });
             manualModeImg = (ImageView) findViewById(R.id.manual_mode_img);
@@ -75,12 +74,10 @@ public class ModeSettingActivity extends BaseActivity {
         {
             autoModeLayout = (LinearLayout) findViewById(R.id.auto_mode_layout);
             assert autoModeLayout != null;
-            // TODO: temporary disabled
-            autoModeLayout.setEnabled(false);
             autoModeLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    setMode(GlobalObjects.UNLOCK_MODE_AUTO);
+                    setMode(Settings.UNLOCK_MODE_AUTO);
                 }
             });
             autoModeImg = (ImageView) findViewById(R.id.auto_mode_img);
@@ -95,7 +92,7 @@ public class ModeSettingActivity extends BaseActivity {
             shakeModeLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    setMode(GlobalObjects.UNLOCK_MODE_SHAKE);
+                    setMode(Settings.UNLOCK_MODE_SHAKE);
                 }
             });
             shakeModeImg = (ImageView) findViewById(R.id.shake_mode_img);
@@ -107,9 +104,13 @@ public class ModeSettingActivity extends BaseActivity {
     }
 
     private void setMode(int mode) {
-        GlobalObjects.unlockMode = mode;
+        Settings.INSTANCE.setUnlockMode(mode);
+        setMode_i(mode);
+    }
+
+    private void setMode_i(int mode) {
         switch (mode) {
-            case GlobalObjects.UNLOCK_MODE_MANUNAL:
+            case Settings.UNLOCK_MODE_MANUNAL:
                 manualModeImg.setImageResource(R.drawable.icon_green_manual);
                 manualModeText.setTextColor(Color.parseColor("green"));
                 autoModeImg.setImageResource(R.drawable.icon_gray_auto);
@@ -117,7 +118,7 @@ public class ModeSettingActivity extends BaseActivity {
                 shakeModeImg.setImageResource(R.drawable.icon_gray_rock);
                 shakeModeText.setTextColor(Color.parseColor("grey"));
                 break;
-            case GlobalObjects.UNLOCK_MODE_AUTO:
+            case Settings.UNLOCK_MODE_AUTO:
                 manualModeImg.setImageResource(R.drawable.icon_gray_manual);
                 manualModeText.setTextColor(Color.parseColor("grey"));
                 autoModeImg.setImageResource(R.drawable.icon_green_auto);
@@ -125,7 +126,7 @@ public class ModeSettingActivity extends BaseActivity {
                 shakeModeImg.setImageResource(R.drawable.icon_gray_rock);
                 shakeModeText.setTextColor(Color.parseColor("grey"));
                 break;
-            case GlobalObjects.UNLOCK_MODE_SHAKE:
+            case Settings.UNLOCK_MODE_SHAKE:
                 manualModeImg.setImageResource(R.drawable.icon_gray_manual);
                 manualModeText.setTextColor(Color.parseColor("grey"));
                 autoModeImg.setImageResource(R.drawable.icon_gray_auto);
@@ -137,4 +138,5 @@ public class ModeSettingActivity extends BaseActivity {
                 break;
         }
     }
+
 }

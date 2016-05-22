@@ -14,5 +14,13 @@ public interface Storage {
 
     <T extends Savable> T get(String key, Class<T> clazz);
 
+    boolean put(String key, boolean v);
+
+    boolean getBoolean(String key, boolean defaultValue);
+
+    boolean put(String key, int v);
+
+    int getInt(String key, int defaultValue);
+
     boolean contains(String key);
 }

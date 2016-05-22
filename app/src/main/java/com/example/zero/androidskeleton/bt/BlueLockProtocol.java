@@ -224,12 +224,12 @@ public class BlueLockProtocol {
         return new Frame((short) 0x4301, SEQ++, data).encode();
     }
 
-    public static byte[] openDoorV2(String password, String phone) {
-        byte[] pass = encode(password);
-        byte[] ph = encode(phone);
-        byte[] data = new byte[pass.length+ph.length];
-        System.arraycopy(pass, 0, data, 0, pass.length);
-        System.arraycopy(ph, 0, data, pass.length, ph.length);
-        return frame(data);
-    }
+    //public static byte[] openDoorV2(String password, String phone) {
+    //    byte[] pass = encode(password);
+    //    byte[] ph = encode(phone);
+    //    byte[] data = new byte[pass.length+ph.length];
+    //    System.arraycopy(pass, 0, data, 0, pass.length);
+    //    System.arraycopy(ph, 0, data, pass.length, ph.length);
+    //    return frame(data);
+    //}
 }

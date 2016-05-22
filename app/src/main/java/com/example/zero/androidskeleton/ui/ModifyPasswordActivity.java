@@ -360,13 +360,25 @@ public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.D
             if (info == null) {
                 info = new BtDeviceStorage.DeviceInfo(mDevice.getName(), mDevice.getAddress());
             }
-            info.setPassword(newPasswordEdit.getText().toString());
+            String password = newPasswordEdit.getText().toString();
+            info.setPassword(password);
             BtDeviceStorage.INSTANCE.put(info);
+            Log.w(TAG, "new password saved: " + password);
         }
 
         if (result == BlueLockProtocol.RESULT_PASSWORD_CHANGED
             || result == BlueLockProtocol.RESULT_ADMIN_PASSWORD_WRONG) {
-            confirmButton.setEnabled(true);
+            GlobalObjects.timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            confirmButton.setEnabled(true);
+                        }
+                    });
+                }
+            }, 3000);
         }
     }
 

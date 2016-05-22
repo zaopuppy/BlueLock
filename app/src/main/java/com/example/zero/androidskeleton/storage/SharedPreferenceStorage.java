@@ -31,6 +31,28 @@ class SharedPreferenceStorage implements Storage {
     }
 
     @Override
+    public boolean put(String key, boolean v) {
+        mPerferences.edit().putBoolean(key, v).apply();
+        return true;
+    }
+
+    @Override
+    public boolean getBoolean(String key, boolean defaultValue) {
+        return mPerferences.getBoolean(key, defaultValue);
+    }
+
+    @Override
+    public boolean put(String key, int v) {
+        mPerferences.edit().putInt(key, v).apply();
+        return true;
+    }
+
+    @Override
+    public int getInt(String key, int defaultValue) {
+        return mPerferences.getInt(key, defaultValue);
+    }
+
+    @Override
     public boolean contains(String key) {
         return mPerferences.contains(key);
     }

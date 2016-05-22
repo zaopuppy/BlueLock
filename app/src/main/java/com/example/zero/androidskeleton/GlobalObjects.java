@@ -1,5 +1,7 @@
 package com.example.zero.androidskeleton;
 
+import com.example.zero.androidskeleton.storage.Settings;
+
 import java.util.Timer;
 
 /**
@@ -7,13 +9,5 @@ import java.util.Timer;
  */
 public class GlobalObjects {
 
-    public static final int UNLOCK_MODE_MANUNAL = 0;
-    public static final int UNLOCK_MODE_AUTO = 1;
-    public static final int UNLOCK_MODE_SHAKE = 2;
-
     public static Timer timer = new Timer();
-
-    public static volatile int unlockMode = UNLOCK_MODE_MANUNAL;
-
-    public static int senseLevel = 40;
 }

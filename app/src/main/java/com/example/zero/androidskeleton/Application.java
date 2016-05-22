@@ -2,6 +2,7 @@ package com.example.zero.androidskeleton;
 
 import com.example.zero.androidskeleton.bt.BtService;
 import com.example.zero.androidskeleton.storage.BtDeviceStorage;
+import com.example.zero.androidskeleton.storage.Settings;
 
 /**
  * Created by zero on 2016/4/4.
@@ -34,6 +35,8 @@ public class Application extends android.app.Application {
 
         BtDeviceStorage.INSTANCE.init(getApplicationContext());
         BtService.INSTANCE.init(getApplicationContext());
+
+        Settings.INSTANCE.init(getApplicationContext());
     }
 
 }

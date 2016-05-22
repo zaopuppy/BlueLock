@@ -1,5 +1,7 @@
 package com.example.zero.androidskeleton.ui;
 
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -17,6 +19,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import com.example.zero.androidskeleton.GlobalObjects;
 import com.example.zero.androidskeleton.R;
+import com.example.zero.androidskeleton.bt.BlueLockProtocol;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
 import com.example.zero.androidskeleton.log.Log;
@@ -27,6 +30,7 @@ import com.example.zero.androidskeleton.sort.SideBar.OnTouchingLetterChangedList
 import com.example.zero.androidskeleton.sort.SortAdapter;
 import com.example.zero.androidskeleton.state.impl.UnlockSM;
 import com.example.zero.androidskeleton.storage.BtDeviceStorage;
+import com.example.zero.androidskeleton.storage.Settings;
 import com.example.zero.androidskeleton.utils.Utils;
 
 import java.util.ArrayList;
@@ -59,15 +63,52 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
     private class MyScanListener implements BtLeService.ScanListener {
 
         @Override
-        public void onDeviceFound(BtLeDevice dev) {
+        public void onDeviceFound(final BtLeDevice dev) {
+            Log.i(TAG, "onDeviceFound: " + dev.getAddress());
             sourceDateList.add(dev);
             mSortAdapter = new SortAdapter(mContext, R.layout.select_list_item_device, sourceDateList);
             mSortListView.setAdapter(mSortAdapter);
 
-            BtDeviceStorage.DeviceInfo info = BtDeviceStorage.INSTANCE.get(dev.getAddress());
-            if (info != null) {
-                // a;
+            if (true) {
+                return;
             }
+
+            if (Settings.INSTANCE.getUnlockMode() != Settings.UNLOCK_MODE_AUTO) {
+                return;
+            }
+            final BtDeviceStorage.DeviceInfo info = BtDeviceStorage.INSTANCE.get(dev.getAddress());
+            if (info == null) {
+                Log.i(TAG, "device: " + dev.getAddress() + " not saved");
+                return;
+            }
+            dev.connectGatt(getApplicationContext());
+            dev.addDeviceListener(new BtLeDevice.DeviceListener() {
+                @Override
+                public void onDeviceStateChanged(BtLeDevice.State state) {
+                    if (state == BtLeDevice.State.DISCONNECTING) {
+                        dev.removeDeviceListener(this);
+                        return;
+                    }
+                    if (state != BtLeDevice.State.READY) {
+                        return;
+                    }
+                    final BluetoothGattCharacteristic char1 = dev.getCharacteristic(0xfff1);
+                    dev.writeCharacteristic(char1, BlueLockProtocol.unlock(info.getPassword()), new BtLeDevice.ResultListener<Boolean>() {
+                        @Override
+                        public void onResult(Boolean result) {
+                            if (result) {
+                                dev.writeCharacteristic(char1, BlueLockProtocol.passPhone(Utils.getPhoneNum(getApplicationContext())), null);
+                            }
+                        }
+                    });
+                }
+
+                @Override
+                public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+                    // TODO: should check result
+                    // dev.disconnectGatt();
+                }
+            });
         }
 
         @Override
@@ -203,10 +244,10 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
         super.onResume();
         mSortAdapter.clear();
         BtLeService.INSTANCE.addScanListener(mScanListener);
-        if (GlobalObjects.unlockMode == GlobalObjects.UNLOCK_MODE_AUTO) {
-            autoUnlock = true;
-            startScan();
-        }
+        //if (Settings.INSTANCE.getUnlockMode() == Settings.UNLOCK_MODE_AUTO) {
+        //    autoUnlock = true;
+        //    startScan();
+        //}
     }
 
     @Override

@@ -31,6 +31,7 @@ import com.example.zero.androidskeleton.component.PasswordEdit;
 import com.example.zero.androidskeleton.log.Log;
 import com.example.zero.androidskeleton.state.impl.UnlockSM;
 import com.example.zero.androidskeleton.storage.BtDeviceStorage;
+import com.example.zero.androidskeleton.storage.Settings;
 import com.example.zero.androidskeleton.ui.anim.Rotate3dAnimation;
 import com.example.zero.androidskeleton.utils.Utils;
 
@@ -120,11 +121,6 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
 
         mUnlockHint = (TextView) findViewById(R.id.result_hint);
         assert mUnlockHint != null;
-
-        BtDeviceStorage.DeviceInfo info = BtDeviceStorage.INSTANCE.get(mDevice.getAddress());
-        if (info != null) {
-            mPasswordEdit.setText(info.getPassword());
-        }
 
         //mPasswordEdit.addTextChangedListener(new TextWatcher() {
         //    @Override
@@ -235,13 +231,19 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
             mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
             SensorManager.SENSOR_DELAY_NORMAL);
 
+        BtDeviceStorage.DeviceInfo info = BtDeviceStorage.INSTANCE.get(mDevice.getAddress());
+        if (info != null) {
+            mPasswordEdit.setText(info.getPassword());
+        }
+
         mUnlockImg.setImageResource(getUnlockImage());
 
         mUnlockHintImg.setVisibility(View.INVISIBLE);
 
         // 根据不同的模式决定界面如何显示
-        switch (GlobalObjects.unlockMode) {
-            case GlobalObjects.UNLOCK_MODE_MANUNAL: {
+        switch (Settings.INSTANCE.getUnlockMode()) {
+            case Settings.UNLOCK_MODE_AUTO:
+            case Settings.UNLOCK_MODE_MANUNAL: {
                 mUnlockHintImg.setVisibility(View.VISIBLE);
                 mUnlockImg.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -258,11 +260,7 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
                 });
                 break;
             }
-            case GlobalObjects.UNLOCK_MODE_AUTO: {
-                mUnlockImg.setOnClickListener(null);
-                break;
-            }
-            case GlobalObjects.UNLOCK_MODE_SHAKE: {
+            case Settings.UNLOCK_MODE_SHAKE: {
                 mUnlockImg.setOnClickListener(null);
                 break;
             }
@@ -272,12 +270,11 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
     }
 
     private static int getUnlockImage() {
-        switch (GlobalObjects.unlockMode) {
-            case GlobalObjects.UNLOCK_MODE_MANUNAL:
+        switch (Settings.INSTANCE.getUnlockMode()) {
+            case Settings.UNLOCK_MODE_MANUNAL:
+            case Settings.UNLOCK_MODE_AUTO:
                 return R.drawable.icon_manualmode_lock;
-            case GlobalObjects.UNLOCK_MODE_AUTO:
-                return R.drawable.icon_automode_lock;
-            case GlobalObjects.UNLOCK_MODE_SHAKE:
+            case Settings.UNLOCK_MODE_SHAKE:
                 return R.drawable.icon_rockmode_lock;
             default:
                 return R.drawable.icon_manualmode_lock;
@@ -285,13 +282,11 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
     }
 
     private static int getUnlockImageSuccess() {
-        switch (GlobalObjects.unlockMode) {
-            case GlobalObjects.UNLOCK_MODE_MANUNAL:
+        switch (Settings.INSTANCE.getUnlockMode()) {
+            case Settings.UNLOCK_MODE_MANUNAL:
+            case Settings.UNLOCK_MODE_AUTO:
+            case Settings.UNLOCK_MODE_SHAKE:
                 return R.drawable.icon_manualmode_succeed;
-            case GlobalObjects.UNLOCK_MODE_AUTO:
-                return R.drawable.icon_automode_succeed;
-            case GlobalObjects.UNLOCK_MODE_SHAKE:
-                return R.drawable.icon_rockmode_succeed;
             default:
                 return R.drawable.icon_manualmode_succeed;
         }
@@ -449,7 +444,7 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (GlobalObjects.unlockMode != GlobalObjects.UNLOCK_MODE_SHAKE) {
+        if (Settings.INSTANCE.getUnlockMode() != Settings.UNLOCK_MODE_SHAKE) {
             return;
         }
 
