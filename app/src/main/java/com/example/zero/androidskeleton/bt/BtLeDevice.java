@@ -36,11 +36,6 @@ public class BtLeDevice extends BluetoothGattCallback {
         void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic);
     }
 
-    private final BluetoothDevice mDevice;
-
-    private State mState = State.DISCONNECTED;
-    private BluetoothGatt mGatt = null;
-
     private interface Task {
 
         boolean exec();
@@ -249,16 +244,29 @@ public class BtLeDevice extends BluetoothGattCallback {
         }
     }
 
+    private final BluetoothDevice mDevice;
+    // device name/address can't be read after we lost them
+    // save them before that happens
+    //private final String mName;
+    //private final String mAddress;
+
+    private State mState = State.DISCONNECTED;
+    private BluetoothGatt mGatt = null;
+
     BtLeDevice(BluetoothDevice device) {
         mDevice = device;
+        //mName = device.getName();
+        //mAddress = device.getAddress();
     }
 
     public String getName() {
         return mDevice.getName();
+        // return mName;
     }
 
     public String getAddress() {
         return mDevice.getAddress();
+        // return mAddress;
     }
 
     private final ConcurrentLinkedQueue<DeviceListener> mDeviceListenerList = new ConcurrentLinkedQueue<>();
@@ -278,7 +286,8 @@ public class BtLeDevice extends BluetoothGattCallback {
     public void disconnectGatt() {
         if (mGatt != null) {
             mGatt.disconnect();
-            mGatt = null;
+            // TODO:
+            // mGatt = null;
         }
     }
 

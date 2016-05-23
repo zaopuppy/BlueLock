@@ -44,6 +44,7 @@ public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.D
         }
         Bundle bundle = intent.getExtras();
 
+        Log.i(TAG, "modify password for device=" + bundle.getString("addr"));
         mDevice = BtLeService.INSTANCE.getDevice(bundle.getString("addr"));
         if (mDevice == null) {
             Utils.makeToast(getApplicationContext(), "no device supplied");
@@ -360,10 +361,11 @@ public class ModifyPasswordActivity extends BaseActivity implements BtLeDevice.D
             if (info == null) {
                 info = new BtDeviceStorage.DeviceInfo(mDevice.getName(), mDevice.getAddress());
             }
+            info.setAddr(mDevice.getAddress());
             String password = newPasswordEdit.getText().toString();
             info.setPassword(password);
             BtDeviceStorage.INSTANCE.put(info);
-            Log.w(TAG, "new password saved: " + password);
+            Log.w(TAG, "new password saved: " + password + ", addr=" + info.getAddr());
         }
 
         if (result == BlueLockProtocol.RESULT_PASSWORD_CHANGED

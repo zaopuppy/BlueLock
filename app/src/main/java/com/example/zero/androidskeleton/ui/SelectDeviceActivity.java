@@ -69,9 +69,9 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
             mSortAdapter = new SortAdapter(mContext, R.layout.select_list_item_device, sourceDateList);
             mSortListView.setAdapter(mSortAdapter);
 
-            if (true) {
-                return;
-            }
+            //if (true) {
+            //    return;
+            //}
 
             if (Settings.INSTANCE.getUnlockMode() != Settings.UNLOCK_MODE_AUTO) {
                 return;
@@ -244,10 +244,10 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
         super.onResume();
         mSortAdapter.clear();
         BtLeService.INSTANCE.addScanListener(mScanListener);
-        //if (Settings.INSTANCE.getUnlockMode() == Settings.UNLOCK_MODE_AUTO) {
-        //    autoUnlock = true;
-        //    startScan();
-        //}
+        if (Settings.INSTANCE.getUnlockMode() == Settings.UNLOCK_MODE_AUTO) {
+            autoUnlock = true;
+            startScan();
+        }
     }
 
     @Override

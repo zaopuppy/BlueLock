@@ -233,6 +233,7 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
 
         BtDeviceStorage.DeviceInfo info = BtDeviceStorage.INSTANCE.get(mDevice.getAddress());
         if (info != null) {
+            Log.w(TAG, "addr=" + info.getAddr() + ", password=" + info.getPassword());
             mPasswordEdit.setText(info.getPassword());
         }
 

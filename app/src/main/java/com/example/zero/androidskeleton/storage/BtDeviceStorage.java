@@ -27,6 +27,10 @@ public class BtDeviceStorage {
             return addr;
         }
 
+        public void setAddr(String addr) {
+            this.addr = addr;
+        }
+
         public String getPassword() {
             return password;
         }
