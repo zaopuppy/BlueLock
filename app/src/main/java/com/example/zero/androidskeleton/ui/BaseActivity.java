@@ -15,13 +15,14 @@ public class BaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         Utils.checkPermissions(this,
-            Manifest.permission.BLUETOOTH,
-            Manifest.permission.BLUETOOTH_ADMIN,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.VIBRATE,
-            Manifest.permission.READ_PHONE_STATE);
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.VIBRATE,
+                Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.INTERNET);
     }
 
     @Override

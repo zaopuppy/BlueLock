@@ -443,6 +443,7 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
         }
     }
 
+    private boolean shakeTriggered = false;
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (Settings.INSTANCE.getUnlockMode() != Settings.UNLOCK_MODE_SHAKE) {
@@ -456,11 +457,16 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
                 Log.d("sensor x ", "============ values[0] = " + values[0]);
                 Log.d("sensor y ", "============ values[1] = " + values[1]);
                 Log.d("sensor z ", "============ values[2] = " + values[2]);
+                if (shakeTriggered) {
+                    return;
+                }
+
                 mVibrator.vibrate(500);
 
                 String password = mPasswordEdit.getText().toString();
                 if (password.length() == 6) {
                     unlock(password);
+                    shakeTriggered = true;
                 } else {
                     Utils.makeToast(getApplicationContext(), "bad password");
                 }
@@ -487,22 +493,25 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
                 startActivity(intent);
                 break;
             }
-            //case R.id.nav_show_mode: {
-            //    Intent intent = new Intent(this, ModeSettingActivity.class);
-            //    startActivity(intent);
-            //    break;
-            //}
+            case R.id.nav_visitor_mode: {
+                Intent intent = new Intent(this, VisitorActivity.class);
+                startActivity(intent);
+                break;
+            }
             case R.id.nav_about:
                 break;
-            case R.id.nav_quit:
+            case R.id.nav_quit: {
                 clearAndFinish();
                 break;
+            }
             default:
                 break;
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout_show);
-        drawer.closeDrawer(GravityCompat.START);
+        if (drawer != null) {
+            drawer.closeDrawer(GravityCompat.START);
+        }
         return true;
     }
 

@@ -7,6 +7,10 @@
             android:icon="@drawable/icon_signal_sidebar"
             android:title="开门密码设置" />
         <item
+            android:id="@+id/nav_visitor_mode"
+            android:icon="@drawable/icon_visitors"
+            android:title="访客模式" />
+        <item
             android:id="@+id/nav_about"
             android:icon="@drawable/icon_sidebar_about"
             android:title="关于" />
