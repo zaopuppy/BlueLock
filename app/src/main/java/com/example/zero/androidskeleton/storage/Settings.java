@@ -19,19 +19,19 @@ public class Settings {
         return true;
     }
 
-    //public boolean isAutoUnlock() {
-    //    return storage.getBoolean("auto-unlock", false);
-    //}
-    //
-    //public void setAutoUnlock(boolean autoUnlock) {
-    //    storage.put("auto-unlock", autoUnlock);
-    //}
-    //
     public int getUnlockMode() {
         return storage.getInt("unlock-mode", UNLOCK_MODE_MANUNAL);
     }
 
     public void setUnlockMode(int unlockMode) {
         storage.put("unlock-mode", unlockMode);
+    }
+
+    public String getVisitorUrl() {
+        return storage.getString("visitor-url", "http://transee.net:81/");
+    }
+
+    public void setVisitorUrl() {
+        storage.put("visitor-url", "http://transee.net:81/");
     }
 }

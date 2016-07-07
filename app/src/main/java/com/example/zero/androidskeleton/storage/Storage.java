@@ -22,5 +22,9 @@ public interface Storage {
 
     int getInt(String key, int defaultValue);
 
+    String getString(String key, String defaultValue);
+
+    void put(String key, String value);
+
     boolean contains(String key);
 }

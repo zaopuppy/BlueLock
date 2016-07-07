@@ -308,6 +308,9 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
         } else if (id == R.id.nav_unlock_mode) {
             Intent intent = new Intent(this, ModeSettingActivity.class);
             startActivity(intent);
+        } else if (id == R.id.nav_visitor_mode) {
+            Intent intent = new Intent(this, VisitorActivity.class);
+            startActivity(intent);
         }
 
         mDrawer.closeDrawer(GravityCompat.START);

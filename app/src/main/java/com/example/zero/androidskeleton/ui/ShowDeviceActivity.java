@@ -493,11 +493,6 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
                 startActivity(intent);
                 break;
             }
-            case R.id.nav_visitor_mode: {
-                Intent intent = new Intent(this, VisitorActivity.class);
-                startActivity(intent);
-                break;
-            }
             case R.id.nav_about:
                 break;
             case R.id.nav_quit: {

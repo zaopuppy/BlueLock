@@ -31,6 +31,6 @@ public class VisitorActivity extends AppCompatActivity {
 
         webView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
 
-        webView.loadUrl("http://wangnima.wicp.net:83/visit/apply");
+        webView.loadUrl("http://transee.net:82/visit/apply");
     }
 }
