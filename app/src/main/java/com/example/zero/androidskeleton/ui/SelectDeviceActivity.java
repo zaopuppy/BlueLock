@@ -105,8 +105,17 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
 
                 @Override
                 public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-                    // TODO: should check result
-                    // dev.disconnectGatt();
+                    byte[] value = characteristic.getValue();
+                    if (value == null || value.length <= 0) {
+                        // ignore
+                        return;
+                    }
+
+                    final byte result = characteristic.getValue()[0];
+                    if (result == BlueLockProtocol.RESULT_PASSWORD_WRONG
+                        || result == BlueLockProtocol.RESULT_PASSWORD_CORRECT) {
+                        dev.disconnectGatt();
+                    }
                 }
             });
         }
@@ -294,23 +303,32 @@ public class SelectDeviceActivity extends BaseActivity implements NavigationView
     
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_sort_by_signal) {
-            mSortSideBar.setVisibility(View.INVISIBLE);
-        } else if (id == R.id.nav_sort_by_name) {
-            mSortSideBar.setVisibility(View.VISIBLE);
-        } else if (id == R.id.nav_sort_by_frequency) {
-            //
-        } else if (id == R.id.nav_quit) {
-            clearAndFinish();
-        } else if (id == R.id.nav_unlock_mode) {
-            Intent intent = new Intent(this, ModeSettingActivity.class);
-            startActivity(intent);
-        } else if (id == R.id.nav_visitor_mode) {
-            Intent intent = new Intent(this, VisitorActivity.class);
-            startActivity(intent);
+        switch (id) {
+            case R.id.nav_sort_by_signal:
+                mSortSideBar.setVisibility(View.INVISIBLE);
+                break;
+            case R.id.nav_sort_by_name:
+                mSortSideBar.setVisibility(View.VISIBLE);
+                break;
+            case R.id.nav_sort_by_frequency:
+                break;
+            case R.id.nav_quit:
+                clearAndFinish();
+                break;
+            case R.id.nav_unlock_mode: {
+                Intent intent = new Intent(this, ModeSettingActivity.class);
+                startActivity(intent);
+                break;
+            }
+            case R.id.nav_visitor_mode: {
+                Intent intent = new Intent(this, VisitorActivity.class);
+                startActivity(intent);
+                break;
+            }
+            default:
+                break;
         }
 
         mDrawer.closeDrawer(GravityCompat.START);

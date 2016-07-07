@@ -487,8 +487,15 @@ public class ShowDeviceActivity extends BaseActivity implements NavigationView.O
             case R.id.nav_show_password: {
                 Bundle bundle = new Bundle();
                 bundle.putString("addr", mDevice.getAddress());
-
                 Intent intent = new Intent(this, ModifyPasswordActivity.class);
+                intent.putExtras(bundle);
+                startActivity(intent);
+                break;
+            }
+            case R.id.nav_open_with_phone_num: {
+                Bundle bundle = new Bundle();
+                bundle.putString("addr", mDevice.getAddress());
+                Intent intent = new Intent(this, PhoneUnlockActivity.class);
                 intent.putExtras(bundle);
                 startActivity(intent);
                 break;
