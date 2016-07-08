@@ -149,7 +149,7 @@ public class PhoneUnlockSM extends StateMachine {
                         Utils.makeToast(mContext, "invalid phone number read: " + phoneNum);
                         return;
                     }
-                    mDevice.writeCharacteristic(char1, BlueLockProtocol.passPhone(phoneNum), new BtLeDevice.ResultListener<Boolean>() {
+                    mDevice.writeCharacteristic(char1, BlueLockProtocol.phoneUnlock(phoneNum), new BtLeDevice.ResultListener<Boolean>() {
                         @Override
                         public void onResult(Boolean result) {
                             Log.d(TAG, "wrote phone num: " + result);

@@ -152,6 +152,27 @@ public class BlueLockProtocol {
         }
     }
 
+    public static byte[] phoneUnlock(String phone) {
+        Log.i(TAG, "phoneUnlock: [" + phone + "]");
+        if (phone == null || phone.length() != 11) {
+            Log.e(TAG, "bad phone number");
+            return null;
+        }
+
+        synchronized (BUFFER) {
+            BUFFER.clear();
+
+            BUFFER.put((byte) 0x0A);
+            BUFFER.put(encode(phone));
+            BUFFER.put((byte) 0x0B);
+
+            BUFFER.flip();
+            byte[] bs = new byte[BUFFER.remaining()];
+            BUFFER.get(bs);
+            return bs;
+        }
+    }
+
     /**
      * 1 byte checksum 168
      * CRC-16 0xE085
