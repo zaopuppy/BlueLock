@@ -10,6 +10,16 @@ import com.example.zero.androidskeleton.utils.Utils;
  * Created by zero on 5/2/16.
  */
 public class BaseActivity extends AppCompatActivity {
+
+    public interface ActivityListener {
+        void onCreate(Bundle savedInstanceState);
+        void onStart();
+        void onResume();
+        void onPause();
+        void onStop();
+        void onDestroy();
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

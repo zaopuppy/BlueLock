@@ -28,10 +28,10 @@ public class Settings {
     }
 
     public String getVisitorUrl() {
-        return storage.getString("visitor-url", "http://transee.net:81/");
+        return storage.getString("visitor-url", "http://www.baidu.com");
     }
 
-    public void setVisitorUrl() {
-        storage.put("visitor-url", "http://transee.net:81/");
+    public void setVisitorUrl(String url) {
+        storage.put("visitor-url", url);
     }
 }

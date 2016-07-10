@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import com.example.zero.androidskeleton.R;
+import com.example.zero.androidskeleton.bt.BlueLockProtocol;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
 import com.example.zero.androidskeleton.log.Log;
@@ -54,24 +55,37 @@ public class PhoneUnlockActivity extends BaseActivity implements BtLeDevice.Devi
         final EditText phoneNumText = (EditText) findViewById(R.id.phone_num_text);
         assert phoneNumText != null;
 
-        Button button = (Button) findViewById(R.id.confirm_button);
+        final Button button = (Button) findViewById(R.id.confirm_button);
         assert button != null;
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                button.setEnabled(false);
                 String phoneNum = phoneNumText.getText().toString();
-
             }
         });
     }
 
     @Override
     public void onDeviceStateChanged(BtLeDevice.State state) {
-        // TODO
+        phoneUnlockSM.handle(PhoneUnlockSM.EVENT_DEV_STATE_CHANGED, -1, state);
     }
 
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-        // TODO
+        byte[] value = characteristic.getValue();
+        if (value == null || value.length <= 0) {
+            // ignore
+            return;
+        }
+
+        final byte result = characteristic.getValue()[0];
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Utils.makeToast(getApplicationContext(), BlueLockProtocol.getCodeDesc(result));
+                finish();
+            }
+        });
     }
 }

@@ -5,6 +5,7 @@ import android.support.v7.app.ActionBar;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -25,6 +26,8 @@ public class ModeSettingActivity extends BaseActivity {
     private ImageView shakeModeImg;
     private TextView shakeModeText;
 
+    private EditText visitorUrlText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,6 +46,12 @@ public class ModeSettingActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         setMode_i(Settings.INSTANCE.getUnlockMode());
+    }
+
+    @Override
+    protected void onPause() {
+        Settings.INSTANCE.setVisitorUrl(visitorUrlText.getText().toString());
+        super.onPause();
     }
 
     @Override
@@ -101,6 +110,8 @@ public class ModeSettingActivity extends BaseActivity {
             assert shakeModeText != null;
         }
 
+        visitorUrlText = (EditText) findViewById(R.id.visitor_url);
+        assert visitorUrlText != null;
     }
 
     private void setMode(int mode) {

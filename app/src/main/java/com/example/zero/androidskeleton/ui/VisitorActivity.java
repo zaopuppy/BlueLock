@@ -6,6 +6,7 @@ import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import com.example.zero.androidskeleton.R;
+import com.example.zero.androidskeleton.storage.Settings;
 
 public class VisitorActivity extends AppCompatActivity {
 
@@ -31,6 +32,6 @@ public class VisitorActivity extends AppCompatActivity {
 
         webView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
 
-        webView.loadUrl("http://transee.net:82/visit/apply");
+        webView.loadUrl(Settings.INSTANCE.getVisitorUrl());
     }
 }
