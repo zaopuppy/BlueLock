@@ -2,9 +2,11 @@ package com.example.zero.androidskeleton.ui;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import com.example.zero.androidskeleton.R;
@@ -25,6 +27,7 @@ public class PhoneUnlockActivity extends BaseActivity implements BtLeDevice.Devi
     private PhoneUnlockSM phoneUnlockSM = null;
 
     private BtLeDevice mDevice = null;
+    private Button unlockButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,17 +54,35 @@ public class PhoneUnlockActivity extends BaseActivity implements BtLeDevice.Devi
         phoneUnlockSM = new PhoneUnlockSM(this, mDevice);
     }
 
+    @Override
+    protected void onDestroy() {
+        if (mDevice != null) {
+            mDevice.removeDeviceListener(this);
+            mDevice.disconnectGatt();
+        }
+        super.onDestroy();
+    }
+
     private void setupUiComp() {
         final EditText phoneNumText = (EditText) findViewById(R.id.phone_num_text);
         assert phoneNumText != null;
 
-        final Button button = (Button) findViewById(R.id.confirm_button);
-        assert button != null;
-        button.setOnClickListener(new View.OnClickListener() {
+        unlockButton = (Button) findViewById(R.id.confirm_button);
+        assert unlockButton != null;
+        unlockButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                button.setEnabled(false);
                 String phoneNum = phoneNumText.getText().toString();
+                if (phoneNum.length() != 11) {
+                    Utils.makeToast(getApplicationContext(), "手机号长度不正确");
+                    return;
+                }
+                unlockButton.setEnabled(false);
+                InputMethodManager manager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (manager != null) {
+                    manager.hideSoftInputFromWindow(phoneNumText.getWindowToken(), 0);
+                }
+                phoneUnlockSM.handle(PhoneUnlockSM.EVENT_UNLOCK, -1, phoneNum);
             }
         });
     }

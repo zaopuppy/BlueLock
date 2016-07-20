@@ -28,7 +28,11 @@ public class Settings {
     }
 
     public String getVisitorUrl() {
-        return storage.getString("visitor-url", "http://www.baidu.com");
+        String url = storage.getString("visitor-url", "");
+        if (url.isEmpty()) {
+            return "http://transee.net:82/door/verify";
+        }
+        return url;
     }
 
     public void setVisitorUrl(String url) {

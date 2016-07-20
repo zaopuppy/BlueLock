@@ -41,9 +41,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.ModifyPasswordActivity"/>
-        <activity android:name=".ui.ModeSettingActivity"/>
-        <activity android:name=".ui.VisitorActivity">
-        </activity>
+        <activity android:name=".ui.ModeSettingActivity" android:windowSoftInputMode="stateAlwaysHidden"/>
+        <activity android:name=".ui.VisitorActivity"/>
+        <activity android:name=".ui.PhoneUnlockActivity"/>
     </application>
 
 </manifest>

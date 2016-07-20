@@ -50,7 +50,7 @@ public class ModeSettingActivity extends BaseActivity {
 
     @Override
     protected void onPause() {
-        Settings.INSTANCE.setVisitorUrl(visitorUrlText.getText().toString());
+        Settings.INSTANCE.setVisitorUrl(visitorUrlText.getText().toString().trim());
         super.onPause();
     }
 
@@ -112,6 +112,7 @@ public class ModeSettingActivity extends BaseActivity {
 
         visitorUrlText = (EditText) findViewById(R.id.visitor_url);
         assert visitorUrlText != null;
+        visitorUrlText.setText(Settings.INSTANCE.getVisitorUrl());
     }
 
     private void setMode(int mode) {
