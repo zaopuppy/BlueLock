@@ -52,6 +52,8 @@ public class PhoneUnlockActivity extends BaseActivity implements BtLeDevice.Devi
         }
 
         phoneUnlockSM = new PhoneUnlockSM(this, mDevice);
+
+        mDevice.addDeviceListener(this);
     }
 
     @Override
