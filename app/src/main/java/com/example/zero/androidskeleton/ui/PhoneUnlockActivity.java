@@ -91,6 +91,7 @@ public class PhoneUnlockActivity extends BaseActivity implements BtLeDevice.Devi
 
     @Override
     public void onDeviceStateChanged(BtLeDevice.State state) {
+        Log.i(TAG, "onDeviceStateChanged: " + state);
         phoneUnlockSM.handle(PhoneUnlockSM.EVENT_DEV_STATE_CHANGED, -1, state);
     }
 

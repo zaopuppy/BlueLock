@@ -119,7 +119,7 @@ public class PhoneUnlockSM extends StateMachine {
             switch (state) {
                 case READY:
                     context.setState(READY);
-                    String phoneNum = context.getString("phoneNum", null);
+                    String phoneNum = context.getString("phone-num", null);
                     Log.d(TAG, "context phone number: " + phoneNum);
                     if (phoneNum != null) {
                         context.handle(EVENT_UNLOCK, -1, phoneNum);
