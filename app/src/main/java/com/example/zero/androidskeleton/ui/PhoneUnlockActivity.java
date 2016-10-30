@@ -13,6 +13,8 @@ import com.example.zero.androidskeleton.R;
 import com.example.zero.androidskeleton.bt.BlueLockProtocol;
 import com.example.zero.androidskeleton.bt.BtLeDevice;
 import com.example.zero.androidskeleton.bt.BtLeService;
+import com.example.zero.androidskeleton.concurrent.Function;
+import com.example.zero.androidskeleton.concurrent.Promise;
 import com.example.zero.androidskeleton.log.Log;
 import com.example.zero.androidskeleton.state.impl.PhoneUnlockSM;
 import com.example.zero.androidskeleton.utils.Utils;

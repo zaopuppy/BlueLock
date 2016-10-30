@@ -3,6 +3,7 @@ package com.example.zero.androidskeleton.bt;
 import android.bluetooth.*;
 import android.content.Context;
 import android.util.Log;
+import com.example.zero.androidskeleton.concurrent.Promise;
 import com.example.zero.androidskeleton.utils.Utils;
 
 import java.nio.ByteBuffer;
@@ -471,10 +472,11 @@ public class BtLeDevice extends BluetoothGattCallback {
         }
     }
 
-    public void writeCharacteristic(BluetoothGattCharacteristic characteristic, byte[] data, ResultListener<Boolean> listener) {
+    public Promise<Integer> writeCharacteristic(BluetoothGattCharacteristic characteristic, byte[] data, ResultListener<Boolean> listener) {
         Log.d(TAG, "writeCharacteristic: " + BtLeUtil.uuidStr(characteristic.getUuid()));
         mTaskQueue.offer(new WriteTask(mGatt, characteristic, data, listener));
         processTask();
+        return null;
     }
 
     @Override
@@ -537,6 +539,13 @@ public class BtLeDevice extends BluetoothGattCallback {
                 // ignore
             }
         }
+    }
+
+
+    // new api
+    public Promise<Integer> unlockByPhoneNum(String phone) {
+        BluetoothGattCharacteristic char1 = getCharacteristic(0xfff1);
+        return writeCharacteristic(char1, BlueLockProtocol.phoneUnlock(phone), null);
     }
 
 }
