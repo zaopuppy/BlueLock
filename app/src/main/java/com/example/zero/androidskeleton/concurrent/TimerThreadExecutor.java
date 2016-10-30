@@ -39,7 +39,7 @@ public class TimerThreadExecutor extends ThreadExecutor {
      * @param timer            timer
      */
     public TimerThreadExecutor(int poolSize, long keepAliveTime, Timer timer) {
-        super(poolSize, keepAliveTime);
+        super(poolSize, keepAliveTime, 50);
         mTimer = timer;
     }
 
